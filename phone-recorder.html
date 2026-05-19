@@ -5,63 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logger Estructuras Flotantes</title>
     <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            padding: 20px; 
-            max-width: 500px; 
-            margin: auto; 
-            background-color: #f4f4f9; 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 20px;
+            max-width: 500px;
+            margin: auto;
+            background-color: #f4f4f9;
         }
         h2 { color: #333; text-align: center; margin-bottom: 5px; }
         .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 25px; }
-        .control-group { 
-            margin-bottom: 20px; 
-            background: white; 
-            padding: 15px; 
-            border-radius: 8px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+        .control-group {
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
-        select { 
-            width: 100%; 
-            padding: 12px; 
-            margin-bottom: 15px; 
-            border-radius: 6px; 
-            border: 1px solid #ccc; 
-            font-size: 16px; 
+        select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 16px;
             background-color: #fff;
         }
-        button { 
-            width: 100%; 
-            padding: 15px; 
-            border-radius: 6px; 
-            border: none; 
-            font-size: 18px; 
-            font-weight: bold; 
-            color: white; 
-            cursor: pointer; 
-            transition: background-color 0.2s; 
+        button {
+            width: 100%;
+            padding: 15px;
+            border-radius: 6px;
+            border: none;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s;
         }
         #btnStart { background-color: #28a745; }
         #btnStart:active { background-color: #1e7e34; }
         #btnStop { background-color: #dc3545; display: none; }
         #btnStop:active { background-color: #bd2130; }
-        #status { 
-            text-align: center; 
-            font-size: 20px; 
-            font-weight: bold; 
-            color: #007bff; 
-            margin: 20px 0; 
+        #status {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #007bff;
+            margin: 20px 0;
             padding: 10px;
             border-radius: 6px;
         }
-        .info-box { 
-            font-size: 12px; 
-            color: #495057; 
-            background: #e9ecef; 
-            padding: 12px; 
-            border-radius: 6px; 
-            margin-top: 20px; 
+        .info-box {
+            font-size: 12px;
+            color: #495057;
+            background: #e9ecef;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 20px;
             line-height: 1.4;
         }
     </style>
@@ -94,45 +94,61 @@
     <button id="btnStop" onclick="detenerYProcesar()">Detener Grabación (Corta 3s)</button>
 
     <div id="status">Listo para registrar</div>
-    
+
     <div class="info-box">
-        <strong>Especificaciones técnicas activas:</strong><br>
-        • Acelerómetro: ~60 Hz (Muestreo nativo del móvil)<br>
-        • Audio: 8000 Hz Mono de 16-bits (Ideal para ambiente + pisadas)<br>
-        • Al presionar detener, se eliminan automáticamente los últimos 3 segundos para evitar ruidos de manipulación.
+        <strong>Especificaciones técnicas robustas:</strong><br>
+        • Acelerómetro: ~60 Hz (Muestreo nativo de tu dispositivo) [cite: 6]<br>
+        • Audio: 8000 Hz Mono de 16-bits via AudioWorklet (Hilo independiente) [cite: 11]<br>
+        • Al presionar detener, se recortan matemáticamente los últimos 3 segundos[cite: 15].
     </div>
 
     <script>
         let isRecording = false;
         let accelData = [];
         let audioData = [];
-        
+
         let audioContext = null;
         let mediaStream = null;
-        let processor = null;
-        
-        const AUDIO_SAMPLE_RATE = 8000; // Frecuencia de audio optimizada
+        let sourceNode = null;
+        let workletNode = null;
 
-        // Función para validar y pedir permisos en iOS y Android
+        const AUDIO_SAMPLE_RATE = 8000; [cite: 11]
+
+        // Código del procesador inline convertido a URL Blob para evitar archivos separados
+        const workletCode = `
+            class AudioProcessor extends AudioWorkletProcessor {
+                process(inputs, outputs, parameters) {
+                    const input = inputs[0];
+                    if (input && input.length > 0) {
+                        const channelData = input[0];
+                        // Enviamos los floats directamente al hilo principal
+                        this.port.postMessage(channelData);
+                    }
+                    return true;
+                }
+            }
+            registerProcessor('audio-processor', AudioProcessor);
+        `;
+
         async function solicitarPermisosYPreparar() {
-            // 1. Permiso para Acelerómetro (Requerido explícitamente en iOS 13+)
+            // 1. Permisos del acelerómetro (Obligatorio en iOS 13+) [cite: 20, 21]
             if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
                 try {
                     const permissionState = await DeviceMotionEvent.requestPermission();
                     if (permissionState !== 'granted') {
-                        alert('Permiso de acelerómetro denegado. No se podrán capturar movimientos.');
+                        alert('Permiso de acelerómetro denegado.');
                         return;
                     }
                 } catch (error) {
-                    alert('Error solicitando sensores de movimiento: ' + error);
+                    alert('Error en sensores de movimiento: ' + error);
                     return;
                 }
             }
 
-            // 2. Controlar el temporizador de retraso antes de grabar
+            // 2. Control de retraso inicial [cite: 13, 14]
             const delaySeconds = parseInt(document.getElementById('delay').value);
             document.getElementById('btnStart').style.display = 'none';
-            
+
             if (delaySeconds > 0) {
                 let timeLeft = delaySeconds;
                 const statusDiv = document.getElementById('status');
@@ -156,42 +172,60 @@
         async function iniciarGrabacion() {
             accelData = [];
             audioData = [];
-            
+
             try {
-                // Configurar captura del Micrófono
-                mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                
-                // Forzamos al AudioContext a usar la frecuencia definida (8000 Hz)
-                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: AUDIO_SAMPLE_RATE });
-                const source = audioContext.createMediaStreamSource(mediaStream);
-                
-                // ScriptProcessor de 4096 bytes de buffer y 1 canal de entrada (Mono)
-                processor = audioContext.createScriptProcessor(4096, 1, 1);
-                
-                source.connect(processor);
-                processor.connect(audioContext.destination);
-                
-                // Captura de datos de audio crudos (Floats entre -1.0 y 1.0)
-                processor.onaudioprocess = function(e) {
+                // Configurar captura del Micrófono sin filtros restrictivos de llamadas (modo crudo)
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    },
+                    video: false
+                });
+
+                // Inicialización del entorno de audio forzando los 8000Hz [cite: 11]
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                audioContext = new AudioContextClass({ sampleRate: AUDIO_SAMPLE_RATE });
+
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume(); [cite: 65]
+                }
+
+                // Cargar el procesador de audio en segundo plano (AudioWorklet)
+                const blob = new Blob([workletCode], { type: 'application/javascript' });
+                const workletUrl = URL.createObjectURL(blob);
+                await audioContext.audioWorklet.addModule(workletUrl);
+
+                sourceNode = audioContext.createMediaStreamSource(mediaStream);
+                workletNode = new AudioWorkletNode(audioContext, 'audio-processor');
+
+                // Escuchamos los buffers que llegan del hilo de audio
+                workletNode.port.onmessage = (event) => {
                     if (!isRecording) return;
-                    const inputData = e.inputBuffer.getChannelData(0);
-                    for (let i = 0; i < inputData.length; i++) {
-                        audioData.push(inputData[i]);
-                    }
+                    // event.data contiene un Float32Array con las muestras de audio
+                    audioData.push(...event.data);
                 };
 
-                // Configurar captura de Acelerómetro
+                sourceNode.connect(workletNode);
+                workletNode.connect(audioContext.destination);
+
+                // Activar el acelerómetro nativo
                 window.addEventListener('devicemotion', capturarMovimiento);
 
-                // Cambiar estado de la interfaz
                 isRecording = true;
                 document.getElementById('btnStop').style.display = 'block';
                 const statusDiv = document.getElementById('status');
                 statusDiv.innerText = '🔴 GRABANDO DATOS...';
                 statusDiv.style.color = '#dc3545';
-                
+
             } catch (err) {
-                alert("Error al acceder al micrófono: " + err.message);
+                console.error(err);
+                if (window.location.protocol !== 'https:') {
+                    alert("Error crítico: No estás usando un entorno seguro (HTTPS). GitHub Pages es obligatorio."); [cite: 51, 59]
+                } else {
+                    alert("Error al iniciar hardware: " + err.name + " - " + err.message);
+                }
                 document.getElementById('btnStart').style.display = 'block';
             }
         }
@@ -199,65 +233,67 @@
         function capturarMovimiento(event) {
             if (!isRecording) return;
             const t = Date.now();
-            // Validar que el hardware entregue lecturas correctas
             const x = event.accelerationIncludingGravity.x ? event.accelerationIncludingGravity.x.toFixed(4) : 0;
             const y = event.accelerationIncludingGravity.y ? event.accelerationIncludingGravity.y.toFixed(4) : 0;
             const z = event.accelerationIncludingGravity.z ? event.accelerationIncludingGravity.z.toFixed(4) : 0;
-            
+
             accelData.push({ t, x, y, z });
         }
 
         function detenerYProcesar() {
             const momentoDetener = Date.now();
             isRecording = false;
-            
-            // Apagar listeners y flujos de hardware inmediatamente
+
+            // Apagar listeners y flujos de hardware de inmediato
             window.removeEventListener('devicemotion', capturarMovimiento);
-            if (processor) { processor.disconnect(); }
+            if (workletNode) { workletNode.disconnect(); }
+            if (sourceNode) { sourceNode.disconnect(); }
             if (audioContext) { audioContext.close(); }
             if (mediaStream) { mediaStream.getTracks().forEach(track => track.stop()); }
 
             document.getElementById('btnStop').style.display = 'none';
             const statusDiv = document.getElementById('status');
-            statusDiv.innerText = 'Procesando y recortando últimos 3s...';
+            statusDiv.innerText = 'Procesando y aplicando recorte...';
             statusDiv.style.color = '#007bff';
 
-            // --- RECORTE DE LOS ÚLTIMOS 3 SEGUNDOS (3000 ms) ---
-            
-            // 1. Recorte del Acelerómetro basándonos en marcas de tiempo
+            // --- RECORTE DE LOS ÚLTIMOS 3 SEGUNDOS (3000 ms) --- [cite: 15]
+
+            // 1. Acelerómetro [cite: 15]
             const tiempoLimiteSensado = momentoDetener - 3000;
             const accelFiltrado = accelData.filter(dato => dato.t <= tiempoLimiteSensado);
 
-            // 2. Recorte de Audio Binario basándonos en índice matemático continuo 
-            // (3 segundos * 8000 muestras por segundo = 24000 muestras)
-            const muestrasAEliminar = 3 * AUDIO_SAMPLE_RATE;
-            const audioFiltrado = audioData.slice(0, -muestrasAEliminar);
+            // 2. Audio Binario (3 segundos * 8000 muestras/seg = 24000 muestras) [cite: 37]
+            const muestrasAEliminar = 3 * AUDIO_SAMPLE_RATE; [cite: 37]
+            const audioFiltrado = audioData.slice(0, -muestrasAEliminar); [cite: 37]
 
-            // --- GENERACIÓN DE NOMBRES BASE ---
+            // Si por algún error de hardware el array está totalmente vacío
+            if (audioData.length === 0) {
+                alert("Advertencia: No se capturaron muestras de audio. Revisa si otra app está usando el micrófono.");
+            }
+
+            // --- GENERACIÓN DE NOMBRES UNIFICADOS --- [cite: 54]
             const actividad = document.getElementById('actividad').value;
             const ahora = new Date();
-            
-            // Formato de fecha limpio: YYYYMMDD_HHMMSS
             const pad = (n) => n < 10 ? '0' + n : n;
-            const fechaStr = ahora.getFullYear() + 
-                             pad(ahora.getMonth() + 1) + 
-                             pad(ahora.getDate()) + "_" + 
-                             pad(ahora.getHours()) + 
-                             pad(ahora.getMinutes()) + 
+            const fechaStr = ahora.getFullYear() +
+                             pad(ahora.getMonth() + 1) +
+                             pad(ahora.getDate()) + "_" +
+                             pad(ahora.getHours()) +
+                             pad(ahora.getMinutes()) +
                              pad(ahora.getSeconds());
-                             
-            const nombreBase = `${actividad}_${fechaStr}`;
 
-            // --- EXPORTAR ARCHIVO 1: CSV DEL ACELERÓMETRO ---
+            const nombreBase = `${actividad}_${fechaStr}`; [cite: 54]
+
+            // --- EXPORTAR ARCHIVO 1: CSV DEL ACELERÓMETRO --- [cite: 48, 55]
             let contenidoCSV = "timestamp_ms,x,y,z\n";
             accelFiltrado.forEach(fila => {
                 contenidoCSV += `${fila.t},${fila.x},${fila.y},${fila.z}\n`;
             });
-            descargarArchivoTexto(`${nombreBase}_acelerometro.csv`, contenidoCSV);
+            descargarArchivoTexto(`${nombreBase}_acelerometro.csv`, contenidoCSV); [cite: 55]
 
-            // --- EXPORTAR ARCHIVO 2: WAV BINARIO DE AUDIO ---
+            // --- EXPORTAR ARCHIVO 2: WAV BINARIO DE AUDIO --- [cite: 48, 55]
             const wavBuffer = estructuraWAV(audioFiltrado, AUDIO_SAMPLE_RATE);
-            descargarArchivoBinario(`${nombreBase}_audio.wav`, wavBuffer, 'audio/wav');
+            descargarArchivoBinario(`${nombreBase}_audio.wav`, wavBuffer, 'audio/wav'); [cite: 55]
 
             // Restablecer interfaz
             statusDiv.innerText = '✅ ¡Archivos Guardados!';
@@ -265,7 +301,6 @@
             document.getElementById('btnStart').style.display = 'block';
         }
 
-        // Descargador para texto (CSV)
         function descargarArchivoTexto(nombre, contenido) {
             const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
@@ -276,7 +311,6 @@
             document.body.removeChild(link);
         }
 
-        // Descargador para Binarios (WAV)
         function descargarArchivoBinario(nombre, buffer, mimeType) {
             const blob = new Blob([buffer], { type: mimeType });
             const link = document.createElement("a");
@@ -294,27 +328,26 @@
 
             /* Cabecera del Contenedor RIFF */
             escribirStringEnBytes(view, 0, 'RIFF');
-            view.setUint32(4, 36 + muestras.length * 2, true); // Tamaño total del archivo menos 8 bytes
+            view.setUint32(4, 36 + muestras.length * 2, true);
             escribirStringEnBytes(view, 8, 'WAVE');
-            
-            /* Formato del Sub-chunk (especificaciones del codec) */
+
+            /* Formato del Sub-chunk */
             escribirStringEnBytes(view, 12, 'fmt ');
-            view.setUint32(16, 16, true);          // Tamaño de este sub-chunk (16)
-            view.setUint16(20, 1, true);           // Audio PCM lineal sin compresión
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);           // PCM lineal
             view.setUint16(22, 1, true);           // 1 Canal (Mono)
-            view.setUint32(24, sampleRate, true);  // Frecuencia de muestreo (8000)
-            view.setUint32(28, sampleRate * 2, true); // Bytes por segundo (SampleRate * Canales * BitsPorMuestra/8)
-            view.setUint16(32, 2, true);           // Bloque de alineación (Canales * BitsPorMuestra/8)
-            view.setUint16(34, 16, true);          // Profundidad de bits: 16-bit
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);          // 16-bit [cite: 32]
 
-            /* Sub-chunk de Datos crudos */
+            /* Sub-chunk de Datos */
             escribirStringEnBytes(view, 36, 'data');
-            view.setUint32(40, muestras.length * 2, true); // Tamaño de la sección de datos
+            view.setUint32(40, muestras.length * 2, true);
 
-            // Volcar y escalar las muestras flotantes de JS a Enteros Binarios de 16-bit (Int16)
             let offset = 44;
             for (let i = 0; i < muestras.length; i++, offset += 2) {
-                let s = Math.max(-1, Math.min(1, muestras[i])); // Prevenir saturación/clipping
+                let s = Math.max(-1, Math.min(1, muestras[i]));
                 view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
             }
             return buffer;
