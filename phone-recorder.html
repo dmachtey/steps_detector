@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logger + Gráfica en Tiempo Real</title>
+    <title>Logger Robusto + 3 Ejes</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -55,7 +55,6 @@
             margin: 10px 0;
         }
 
-        /* Contenedores de las Gráficas */
         .canvas-container {
             background: white;
             padding: 10px;
@@ -64,11 +63,16 @@
             margin-bottom: 10px;
         }
         .canvas-title {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             color: #444;
             margin-bottom: 4px;
             text-transform: uppercase;
+        }
+        .legend {
+            font-size: 10px;
+            margin-bottom: 4px;
+            text-align: right;
         }
         canvas {
             width: 100%;
@@ -82,7 +86,7 @@
 <body>
 
     <h2>Logger de Datos</h2>
-    <div class="subtitle">Detector de Pasos — Monitor en Tiempo Real</div>
+    <div class="subtitle">Detector de Pasos — Estructuras Flotantes</div>
 
     <div class="control-group">
         <label for="actividad">Estado / Actividad:</label>
@@ -107,39 +111,48 @@
     <div id="status">Listo para registrar</div>
 
     <div class="canvas-container">
-        <div class="canvas-title">Osciloscopio Audio (Micrófono)</div>
+        <div class="canvas-title">Monitor de Audio (Entrada de Micrófono)</div>
         <canvas id="audioCanvas"></canvas>
     </div>
 
     <div class="canvas-container">
-        <div class="canvas-title">Acelerómetro (Eje Z - Impacto vertical)</div>
+        <div class="canvas-title">Acelerómetro Activo</div>
+        <div class="legend">
+            <span style="color:#dc3545">■ X</span> |
+            <span style="color:#007bff">■ Y</span> |
+            <span style="color:#28a745">■ Z</span>
+        </div>
         <canvas id="accelCanvas"></canvas>
     </div>
 
     <script>
         let isRecording = false;
         let accelData = [];
-        let audioData = [];
+        let audioChunks = []; // Almacenamiento nativo del grabador
 
         let audioContext = null;
         let mediaStream = null;
-        let sourceNode = null;
+        let mediaRecorder = null;
         let analyserNode = null;
-        let processorNode = null;
+        let sourceNode = null;
 
         const AUDIO_SAMPLE_RATE = 8000;
-        let ultimoValorZ = 0; // Para pasar el dato del sensor al bucle de dibujo
 
-        // Variables de dibujo (Canvas)
+        // Variables globales instantáneas para las gráficas
+        let ultimoX = 0, ultimoY = 0, ultimoZ = 0;
+
+        // Configuración de lienzos (Canvas)
         const audioCanvas = document.getElementById('audioCanvas');
         const audioCtx = audioCanvas.getContext('2d');
         const accelCanvas = document.getElementById('accelCanvas');
         const accelCtx = accelCanvas.getContext('2d');
 
-        let zHistory = new Array(100).fill(0); // Historial de puntos para graficar el eje Z
+        // Historiales de datos para la visualización fluida
+        let xHistory = new Array(100).fill(0);
+        let yHistory = new Array(100).fill(0);
+        let zHistory = new Array(100).fill(0);
         let animationFrameId = null;
 
-        // Ajustar resolución nativa de los lienzos
         function ajustarCanvas() {
             audioCanvas.width = audioCanvas.clientWidth;
             audioCanvas.height = audioCanvas.clientHeight;
@@ -150,13 +163,13 @@
         ajustarCanvas();
 
         async function solicitarPermisosYPreparar() {
-            // Inicializar lienzos con fondo negro antes de arrancar
+            // Limpieza inicial de pantallas
             audioCtx.fillStyle = '#111';
             audioCtx.fillRect(0, 0, audioCanvas.width, audioCanvas.height);
             accelCtx.fillStyle = '#111';
             accelCtx.fillRect(0, 0, accelCanvas.width, accelCanvas.height);
 
-            // Permiso del acelerómetro (iOS)
+            // Validación de sensores en iOS [cite: 20, 21]
             if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
                 try {
                     const permissionState = await DeviceMotionEvent.requestPermission();
@@ -195,11 +208,11 @@
 
         async function iniciarGrabacion() {
             accelData = [];
-            audioData = [];
-            zHistory.fill(0);
+            audioChunks = [];
+            xHistory.fill(0); yHistory.fill(0); zHistory.fill(0);
 
             try {
-                // Solicitar micrófono sin filtros del teléfono que apaguen las pisadas
+                // Captura del hardware del micrófono sin filtros destructivos [cite: 115, 116]
                 mediaStream = await navigator.mediaDevices.getUserMedia({
                     audio: {
                         echoCancellation: false,
@@ -209,51 +222,41 @@
                     video: false
                 });
 
+                // 1. CONFIGURACIÓN DEL MONITOR GRÁFICO (AudioContext + Analyser)
                 const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                audioContext = new AudioContextClass({ sampleRate: AUDIO_SAMPLE_RATE });
-
-                if (audioContext.state === 'suspended') {
-                    await audioContext.resume();
-                }
-
+                audioContext = new AudioContextClass();
                 sourceNode = audioContext.createMediaStreamSource(mediaStream);
-
-                // Nodo Analizador para la gráfica en tiempo real
                 analyserNode = audioContext.createAnalyser();
                 analyserNode.fftSize = 256;
+                sourceNode.connect(analyserNode);
 
-                // Procesador clásico compatible pero optimizado
-                processorNode = audioContext.createScriptProcessor(2048, 1, 1);
-
-                processorNode.onaudioprocess = function(e) {
-                    if (!isRecording) return;
-                    const inputData = e.inputBuffer.getChannelData(0);
-                    // Guardar los datos de audio de manera secuencial y forzada en memoria
-                    for (let i = 0; i < inputData.length; i++) {
-                        audioData.push(inputData[i]);
+                // 2. CONFIGURACIÓN DEL GRABADOR SEGURO (MediaRecorder de nivel de sistema operativo)
+                // Esto garantiza que el audio se capture en segundo plano de manera nativa e inmune a cuelgues
+                mediaRecorder = new MediaRecorder(mediaStream);
+                mediaRecorder.ondataavailable = function(e) {
+                    if (e.data.size > 0) {
+                        audioChunks.push(e.data);
                     }
                 };
 
-                // Enrutamiento del flujo de audio
-                sourceNode.connect(analyserNode);
-                analyserNode.connect(processorNode);
-                processorNode.connect(audioContext.destination);
+                // Iniciar recolección por bloques cada 500ms para asegurar la persistencia
+                mediaRecorder.start(500);
 
-                // Activar acelerómetro
+                // 3. ACTIVAR SENSORES DE MOVIMIENTO [cite: 6]
                 window.addEventListener('devicemotion', capturarMovimiento);
 
                 isRecording = true;
                 document.getElementById('btnStop').style.display = 'block';
                 const statusDiv = document.getElementById('status');
-                statusDiv.innerText = '🔴 GRABANDO Y MONITOREANDO...';
+                statusDiv.innerText = '🔴 REGISTRANDO DATOS Y AUDIO...';
                 statusDiv.style.color = '#dc3545';
 
-                // Iniciar el ciclo de dibujo en pantalla
+                // Lanzar bucle visual
                 dibujarGraficos();
 
             } catch (err) {
                 console.error(err);
-                alert("Error de inicio: " + err.name + " - " + err.message);
+                alert("Error crítico de hardware: " + err.name + " - " + err.message);
                 document.getElementById('btnStart').style.display = 'block';
             }
         }
@@ -262,12 +265,15 @@
             if (!isRecording) return;
             const t = Date.now();
 
-            // Si el hardware no responde, asignamos 0 provisorio
             const x = event.accelerationIncludingGravity.x ? event.accelerationIncludingGravity.x.toFixed(4) : 0;
             const y = event.accelerationIncludingGravity.y ? event.accelerationIncludingGravity.y.toFixed(4) : 0;
             const z = event.accelerationIncludingGravity.z ? event.accelerationIncludingGravity.z.toFixed(4) : 0;
 
-            ultimoValorZ = parseFloat(z); // Actualizar variable global para el gráfico continuo
+            // Pasar valores crudos al hilo de renderizado
+            ultimoX = parseFloat(x);
+            ultimoY = parseFloat(y);
+            ultimoZ = parseFloat(z);
+
             accelData.push({ t, x, y, z });
         }
 
@@ -275,7 +281,7 @@
             if (!isRecording) return;
             animationFrameId = requestAnimationFrame(dibujarGraficos);
 
-            // --- 1. DIBUJAR GRÁFICA DE AUDIO (Forma de onda en tiempo real) ---
+            // --- GRÁFICA DE AUDIO ---
             const bufferLength = analyserNode.frequencyBinCount;
             const dataArray = new Uint8Array(bufferLength);
             analyserNode.getByteTimeDomainData(dataArray);
@@ -283,7 +289,7 @@
             audioCtx.fillStyle = '#111';
             audioCtx.fillRect(0, 0, audioCanvas.width, audioCanvas.height);
             audioCtx.lineWidth = 2;
-            audioCtx.strokeStyle = '#007bff'; // Azul para el audio
+            audioCtx.strokeStyle = '#007bff';
             audioCtx.beginPath();
 
             const sliceWidth = audioCanvas.width * 1.0 / bufferLength;
@@ -292,119 +298,136 @@
             for (let i = 0; i < bufferLength; i++) {
                 const v = dataArray[i] / 128.0;
                 const yAudio = v * audioCanvas.height / 2;
-
-                if (i === 0) {
-                    audioCtx.moveTo(xAudio, yAudio);
-                } else {
-                    audioCtx.lineTo(xAudio, yAudio);
-                }
+                if (i === 0) audioCtx.moveTo(xAudio, yAudio);
+                else audioCtx.lineTo(xAudio, yAudio);
                 xAudio += sliceWidth;
             }
             audioCtx.lineTo(audioCanvas.width, audioCanvas.height / 2);
             audioCtx.stroke();
 
 
-            // --- 2. DIBUJAR GRÁFICA DEL ACELERÓMETRO (Eje Z) ---
-            // Añadir el último valor leído al historial y descartar el más viejo
-            zHistory.push(ultimoValorZ);
-            zHistory.shift();
+            // --- GRÁFICA DEL ACELERÓMETRO (3 EJES COMPLETOS) ---
+            xHistory.push(ultimoX); xHistory.shift();
+            yHistory.push(ultimoY); yHistory.shift();
+            zHistory.push(ultimoZ); zHistory.shift();
 
             accelCtx.fillStyle = '#111';
             accelCtx.fillRect(0, 0, accelCanvas.width, accelCanvas.height);
-            accelCtx.lineWidth = 2;
-            accelCtx.strokeStyle = '#28a745'; // Verde para el movimiento Z
-            accelCtx.beginPath();
+            accelCtx.lineWidth = 1.8;
 
             const stepX = accelCanvas.width / (zHistory.length - 1);
 
-            for (let i = 0; i < zHistory.length; i++) {
-                // Escalamos el eje Z (asumiendo rangos normales entre -20 y +20 m/s^2 con gravedad)
-                // Mapeamos el centro del canvas al valor 0 de gravedad
-                const valorNormalizado = (zHistory[i] / 25) + 0.5;
-                // Invertir eje Y del canvas para que valores positivos vayan hacia arriba
-                const yAccel = accelCanvas.height - (valorNormalizado * accelCanvas.height);
-
-                if (i === 0) {
-                    accelCtx.moveTo(0, yAccel);
-                } else {
-                    accelCtx.lineTo(i * stepX, yAccel);
+            // Función interna para dibujar un eje específico de manera aislada
+            function dibujarEje(historial, color) {
+                accelCtx.strokeStyle = color;
+                accelCtx.beginPath();
+                for (let i = 0; i < historial.length; i++) {
+                    const valorNormalizado = (historial[i] / 30) + 0.5; // Escala adaptada a +-15 m/s^2
+                    const yAccel = accelCanvas.height - (valorNormalizado * accelCanvas.height);
+                    if (i === 0) accelCtx.moveTo(0, yAccel);
+                    else accelCtx.lineTo(i * stepX, yAccel);
                 }
+                accelCtx.stroke();
             }
-            accelCtx.stroke();
 
-            // Línea de referencia central (0 estructural)
+            // Renderizar los tres ejes independientes simultáneamente en pantalla
+            dibujarEje(xHistory, '#dc3545'); // X -> Rojo
+            dibujarEje(yHistory, '#007bff'); // Y -> Azul
+            dibujarEje(zHistory, '#28a745'); // Z -> Verde
+
+            // Línea central de referencia estática
             accelCtx.lineWidth = 1;
-            accelCtx.strokeStyle = '#444';
+            accelCtx.strokeStyle = '#333';
             accelCtx.setLineDash([5, 5]);
             accelCtx.beginPath();
             accelCtx.moveTo(0, accelCanvas.height / 2);
             accelCtx.lineTo(accelCanvas.width, accelCanvas.height / 2);
             accelCtx.stroke();
-            accelCtx.setLineDash([]); // Reestablecer trazo continuo
+            accelCtx.setLineDash([]);
         }
 
-        function detenerYProcesar() {
+        async function detenerYProcesar() {
             const momentoDetener = Date.now();
             isRecording = false;
 
-            // Cancelar animaciones de dibujo y apagar hardware de inmediato
-            if (animationFrameId) { cancelAnimationFrame(animationFrameId); }
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
             window.removeEventListener('devicemotion', capturarMovimiento);
 
-            if (processorNode) { processorNode.disconnect(); }
-            if (analyserNode) { analyserNode.disconnect(); }
-            if (sourceNode) { sourceNode.disconnect(); }
-            if (audioContext) { audioContext.close(); }
-            if (mediaStream) { mediaStream.getTracks().forEach(track => track.stop()); }
+            // Frenar grabador nativo
+            if (mediaRecorder) mediaRecorder.stop();
+            if (audioContext) audioContext.close();
+            if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
 
             document.getElementById('btnStop').style.display = 'none';
             const statusDiv = document.getElementById('status');
-            statusDiv.innerText = 'Recortando 3 segundos y guardando...';
+            statusDiv.innerText = 'Cortando últimos 3s y empaquetando archivos...';
             statusDiv.style.color = '#007bff';
 
-            // --- RECORTE DE LOS ÚLTIMOS 3 SEGUNDOS ---
+            // --- RECORTE DE LOS ÚLTIMOS 3 SEGUNDOS EN EL ACELERÓMETRO [cite: 15] ---
             const tiempoLimiteSensado = momentoDetener - 3000;
             const accelFiltrado = accelData.filter(dato => dato.t <= tiempoLimiteSensado);
 
-            // 3 segundos * 8000 muestras/seg = 24000 muestras de audio
-            const muestrasAEliminar = 3 * AUDIO_SAMPLE_RATE;
-            const audioFiltrado = audioData.slice(0, -muestrasAEliminar);
-
-            // Alerta visual de diagnóstico
-            alert(`Registro finalizado.\nMuestras de Audio capturadas: ${audioFiltrado.length}\nPuntos de Acelerómetro: ${accelFiltrado.length}`);
-
-            // --- GENERACIÓN DE NOMBRES ---
+            // --- GENERACIÓN DE NOMBRES BASE [cite: 54, 55] ---
             const actividad = document.getElementById('actividad').value;
             const ahora = new Date();
             const pad = (n) => n < 10 ? '0' + n : n;
-            const fechaStr = ahora.getFullYear() +
-                             pad(ahora.getMonth() + 1) +
-                             pad(ahora.getDate()) + "_" +
-                             pad(ahora.getHours()) +
-                             pad(ahora.getMinutes()) +
-                             pad(ahora.getSeconds());
-
+            const fechaStr = ahora.getFullYear() + pad(ahora.getMonth() + 1) + pad(ahora.getDate()) + "_" + pad(ahora.getHours()) + pad(ahora.getMinutes()) + pad(ahora.getSeconds());
             const nombreBase = `${actividad}_${fechaStr}`;
 
-            // --- DESCARGA 1: CSV ACELERÓMETRO ---
+            // --- EXPORTAR ARCHIVO 1: CSV DEL ACELERÓMETRO ---
             let contenidoCSV = "timestamp_ms,x,y,z\n";
             accelFiltrado.forEach(fila => {
                 contenidoCSV += `${fila.t},${fila.x},${fila.y},${fila.z}\n`;
             });
-            descargarArchivoTexto(`${nombreBase}_acelerometro.csv`, contenidoCSV);
+            descargarArchivo(nombreBase + "_acelerometro.csv", new Blob([contenidoCSV], { type: 'text/csv;charset=utf-8;' }));
 
-            // --- DESCARGA 2: WAV AUDIO BINARIO ---
-            const wavBuffer = estructuraWAV(audioFiltrado, AUDIO_SAMPLE_RATE);
-            descargarArchivoBinario(`${nombreBase}_audio.wav`, wavBuffer, 'audio/wav');
+            // --- EXPORTAR ARCHIVO 2: AUDIO COMPATIBLE (Mecanismo Downsampling Avanzado) ---
+            // Unimos los bloques binarios capturados nativamente por el teléfono
+            const audioBlobCompleto = new Blob(audioChunks, { type: 'audio/webm' });
 
-            // Restablecer interfaz
-            statusDiv.innerText = '✅ ¡Archivos Guardados!';
-            statusDiv.style.color = '#28a745';
+            // Para garantizar que el audio se guarde a la frecuencia exacta solicitada (8000 Hz)...
+            // ... usamos un renderizador offline secundario que decodifica y recorta los últimos 3 segundos matemáticos.
+            const arrayBuffer = await audioBlobCompleto.arrayBuffer();
+            const offlineCtxClass = window.AudioContext || window.webkitAudioContext;
+            const tempCtx = new offlineCtxClass();
+
+            try {
+                const audioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+
+                // Calcular duración final restándole los 3 segundos solicitados [cite: 15]
+                const duracionOriginal = audioBuffer.duration;
+                const duracionFiltrada = Math.max(0, duracionOriginal - 3);
+
+                // Crear un contexto offline forzando los 8000 Hz de salida solicitados [cite: 11]
+                const OfflineAudioContextClass = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+                const offlineCtx = new OfflineAudioContextClass(1, AUDIO_SAMPLE_RATE * duracionFiltrada, AUDIO_SAMPLE_RATE);
+
+                const bufferSource = offlineCtx.createBufferSource();
+                bufferSource.buffer = audioBuffer;
+                bufferSource.connect(offlineCtx.destination);
+                bufferSource.start();
+
+                const renderedBuffer = await offlineCtx.startRendering();
+                const canalDatos = renderedBuffer.getChannelData(0);
+
+                // Generar la cabecera WAV binaria limpia [cite: 41]
+                const wavBuffer = estructuraWAV(canalDatos, AUDIO_SAMPLE_RATE);
+                descargarArchivo(nombreBase + "_audio.wav", new Blob([wavBuffer], { type: 'audio/wav' }));
+
+                statusDiv.innerText = '✅ ¡Archivos Guardados!';
+                statusDiv.style.color = '#28a745';
+            } catch (decodeError) {
+                // Salvaguarda: si el descodificador del móvil falla, descarga el archivo de audio crudo original para no perder datos
+                console.error(decodeError);
+                descargarArchivo(nombreBase + "_audio_crudo.webm", audioBlobCompleto);
+                statusDiv.innerText = '⚠️ Guardado con audio crudo';
+                statusDiv.style.color = '#ffc107';
+            }
+
             document.getElementById('btnStart').style.display = 'block';
         }
 
-        function descargarArchivoTexto(nombre, contenido) {
-            const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
+        function descargarArchivo(nombre, blob) {
             const link = document.createElement("a");
             link.href = URL.createObjectURL(blob);
             link.download = nombre;
@@ -413,32 +436,20 @@
             document.body.removeChild(link);
         }
 
-        function descargarArchivoBinario(nombre, buffer, mimeType) {
-            const blob = new Blob([buffer], { type: mimeType });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = nombre;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // Estructurador Binario Oficial de archivos RIFF/WAV de 16 bits
         function estructuraWAV(muestras, sampleRate) {
             const buffer = new ArrayBuffer(44 + muestras.length * 2);
             const view = new DataView(buffer);
-
             escribirStringEnBytes(view, 0, 'RIFF');
             view.setUint32(4, 36 + muestras.length * 2, true);
             escribirStringEnBytes(view, 8, 'WAVE');
             escribirStringEnBytes(view, 12, 'fmt ');
             view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true); // PCM lineal
-            view.setUint16(22, 1, true); // Mono
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
             view.setUint32(24, sampleRate, true);
             view.setUint32(28, sampleRate * 2, true);
             view.setUint16(32, 2, true);
-            view.setUint16(34, 16, true); // 16-bit
+            view.setUint16(34, 16, true);
             escribirStringEnBytes(view, 36, 'data');
             view.setUint32(40, muestras.length * 2, true);
 
