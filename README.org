@@ -4,10 +4,8 @@
 #
 # Created: Wed May 20 06:50:51 2026 (-0300)
 #
-# Last-Updated:
-#           By:
-#
-#
+# Last-Updated: Wed May 20 06:55:16 2026 (-0300)
+#           By: Damian Machtey
 #+LATEX_CLASS: article
 #+LATEX_CLASS_OPTIONS: [a4paper, 11pt, oneside]
 #+TITLE: Detección de Intrusión mediante Análisis Vibracional en Estructuras Flotantes
