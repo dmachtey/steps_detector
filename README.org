@@ -4,7 +4,7 @@
 #
 # Created: Wed May 20 06:50:51 2026 (-0300)
 #
-# Last-Updated: Wed May 20 07:08:19 2026 (-0300)
+# Last-Updated: Wed May 20 07:13:32 2026 (-0300)
 #           By: Damian Machtey
 #+LATEX_CLASS: article
 #+LATEX_CLASS_OPTIONS: [a4paper, 11pt, oneside]
@@ -61,7 +61,7 @@ https://docs.waveshare.com/ESP32-S3-Touch-AMOLED-1.8
 #+CAPTION: Placa
 #+NAME: fig:placa
 #+ATTR_LaTeX: :width 0.6\textwidth\textwidth :options angle=0 :placement [H]
-file:~/tmp/steps-detect/steps_detector/media/ESP32-S3-Touch-AMOLED-1.8.webp
+file:~/tmp/steps-detect/steps_detector/media/ESP32-S3-Touch-AMOLED-1.8.jpg
 
 
 1. ESP32-S3R8 WiFi and Bluetooth SoC, 240MHz operating frequency,
@@ -97,12 +97,12 @@ file:~/tmp/steps-detect/steps_detector/media/ESP32-S3-Touch-AMOLED-1.8.webp
 #+CAPTION: PinOut
 #+NAME: fig:pinout
 #+ATTR_LaTeX: :width 0.6\textwidth\textwidth :options angle=0 :placement [H]
-file:~/tmp/steps-detect/steps_detector/media/ESP32-S3-Touch-AMOLED-1.8-pinout.webp
+file:~/tmp/steps-detect/steps_detector/media/ESP32-S3-Touch-AMOLED-1.8-pinout.jpg
 
 #+CAPTION: Dimensiones
 #+NAME: fig:dim
 #+ATTR_LaTeX: :width 0.6\textwidth\textwidth :options angle=0 :placement [H]
-file:~/tmp/steps-detect/steps_detector/media/ESP32-S3-Touch-AMOLED-1.8-size.webp
+file:~/tmp/steps-detect/steps_detector/media/ESP32-S3-Touch-AMOLED-1.8-size.jpg
 
 
 * data collector
