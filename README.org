@@ -4,7 +4,7 @@
 #
 # Created: Wed May 20 06:50:51 2026 (-0300)
 #
-# Last-Updated: Wed May 20 06:55:16 2026 (-0300)
+# Last-Updated: Wed May 20 07:08:19 2026 (-0300)
 #           By: Damian Machtey
 #+LATEX_CLASS: article
 #+LATEX_CLASS_OPTIONS: [a4paper, 11pt, oneside]
@@ -22,6 +22,87 @@ El diseño de viviendas flotantes y estructuras modulares acuáticas presenta de
 ** Objetivo
 Desarrollar un sistema embebido basado en **ESP32** y el sensor **MPU-9150** (Acelerómetro/Giroscopio/Magnetómetro) capaz de detectar la firma vibracional de pasos humanos sobre la plataforma, diferenciándolos del movimiento natural del agua (oleaje) mediante técnicas de DSP.
 
+* Hardware seleccionado
+https://docs.waveshare.com/ESP32-S3-Touch-AMOLED-1.8
+- Waveshare ESP32-S3 1.8 Inch AMOLED Touch Display Development Board,
+  32-Bit LX7 Dual-Core Processor, 368 x 448, Accelerometer & Gyroscope
+  Sensor, ESP32 With Display, Support 3.7 V Li Battery(NOT Included)
+**   About this item
+ - Equipped with ESP32-S3R8 Xtensa 32-bit LX7 dual-core processor, up
+   to 240MHz main frequency. Supports 2.4GHz Wi-Fi (802.11 b/g/n) and
+   Bluetooth 5 (LE), with onboard antenna. Built in 512KB of SRAM and
+   384KB ROM, with onboard 8MB PSRAM and an external 16MB Flash
+   memory. Type-C connector, improving device compatibility, easier to
+   use
+ - Onboard 1.8 inch AMOLED display for clear color picture display,
+   368 x 448 resolution, 16.7M color. Built-in SH8601 display driver
+   and FT3168 capacitive touch chip, using QSPI and I2C communication
+   respectively, effectively saving the IO resources. Onboard PWR and
+   BOOT programmable buttons for easy custom function development
+ - Onboard QMI8658 6-axis IMU (3-axis accelerometer and 3-axis
+   gyroscope) for detecting motion gesture, counting steps,
+   etc. Onboard PCF85063 RTC chip, powered by main Lithium battery
+   through AXP2101 chip, with reserved RTC battery pads for connecting
+   a backup battery, ensuring RTC function during the replacement of
+   the main battery. Onboard 3.7 V MX1.25 lithium battery
+   recharge/discharge header, support 3.7 V lithium battery (not
+   included)
+ - Reserved pads of 7 x GPIO, 1 x I2C, 1 x UART, and 1 x USB
+   interface, for connecting peripherals and debugging. Onboard TF
+   card slot for extended storage and fast data transfer, suitable for
+   applications such as data recording and media playback, simplifying
+   circuit design
+ - Adopts AXP2101 IC for efficient power management, supports multiple
+   voltage outputs, battery charging, battery management, and battery
+   life optimization, etc. Adopts AMOLED screen, featuring advantages
+   of high contrast, wide viewing angle, rich colors, fast response,
+   thinner design, and low power consumption, etc
+** Imagen
+#+CAPTION: Placa
+#+NAME: fig:placa
+#+ATTR_LaTeX: :width 0.6\textwidth\textwidth :options angle=0 :placement [H]
+file:~/tmp/steps-detect/steps_detector/media/ESP32-S3-Touch-AMOLED-1.8.webp
+
+
+1. ESP32-S3R8 WiFi and Bluetooth SoC, 240MHz operating frequency,
+   stacked 8MB PSRAM
+2. QMI8658 6-axis Inertial Measurement Unit (IMU), integrating a 3-axis
+   accelerometer and 3-axis gyroscope
+3. PCF85063 RTC real-time clock chip
+4. AXP2101 Highly integrated power management chip
+5. ES8311 Audio codec, driving microphone input and speaker output via
+   I²S interface
+6. Speaker Onboard audio output, driven by ES8311
+7. Backup Battery Pad Dedicated solder pad that keeps the RTC
+   continuously powered when replacing the main battery, preventing
+   time loss
+8. MX1.25 Lithium Battery Connector MX1.25 2P connector for connecting
+   a 3.7V lithium battery, supporting both charging and discharging
+9. 16MB NOR Flash Mounted via SPI interface, available for storing
+   firmware, UI assets, and user data
+10. Microphone Onboard analog microphone that captures ambient audio,
+    which is converted from analog to digital by the ES8311 and then
+    processed by the ESP32-S3
+11. Onboard Chip Antenna Supports 2.4 GHz Wi-Fi (802.11 b/g/n) and
+    Bluetooth® 5 (LE)
+12. Reserved 1mm Pitch GPIO Pads Exposes available IO pins for
+    connecting external expansion modules
+13. BOOT Button Hold during power-on to enter firmware download mode;
+    can be assigned custom functions at runtime
+14. Type-C Connector ESP32-S3 USB interface for flashing firmware and
+    log output
+15. PWR Power Button Controls power on/off, with support for
+    customizable long-press/short-press behavior
+
+#+CAPTION: PinOut
+#+NAME: fig:pinout
+#+ATTR_LaTeX: :width 0.6\textwidth\textwidth :options angle=0 :placement [H]
+file:~/tmp/steps-detect/steps_detector/media/ESP32-S3-Touch-AMOLED-1.8-pinout.webp
+
+#+CAPTION: Dimensiones
+#+NAME: fig:dim
+#+ATTR_LaTeX: :width 0.6\textwidth\textwidth :options angle=0 :placement [H]
+file:~/tmp/steps-detect/steps_detector/media/ESP32-S3-Touch-AMOLED-1.8-size.webp
 
 
 * data collector
