@@ -1,442 +1,458 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
+  <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logger Estructuras Flotantes - Final</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding: 15px;
-            max-width: 500px;
-            margin: auto;
-            background-color: #f4f4f9;
-            box-sizing: border-box;
-        }
-        h2 { color: #333; text-align: center; margin: 5px 0; }
-        .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 15px; }
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Logger Estructuras Flotantes - Final</title>
+        <style>
+          body {
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          padding: 15px;
+          max-width: 500px;
+          margin: auto;
+          background-color: #f4f4f9;
+          box-sizing: border-box;
+          }
+          h2 { color: #333; text-align: center; margin: 5px 0; }
+          .subtitle { text-align: center; color: #666; font-size: 13px; margin-bottom: 15px; }
 
-        .control-group {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 15px;
-        }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 14px; }
-        select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 15px;
-            background-color: #fff;
-        }
+          .control-group {
+          background: white;
+          padding: 12px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          margin-bottom: 15px;
+          }
+          label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; font-size: 14px; }
+          select {
+          width: 100%;
+          padding: 10px;
+          margin-bottom: 10px;
+          border-radius: 6px;
+          border: 1px solid #ccc;
+          font-size: 15px;
+          background-color: #fff;
+          }
 
-        button {
-            width: 100%;
-            padding: 14px;
-            border-radius: 6px;
-            border: none;
-            font-size: 16px;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-        }
-        #btnStart { background-color: #28a745; }
-        #btnStop { background-color: #dc3545; display: none; }
+          button {
+          width: 100%;
+          padding: 14px;
+          border-radius: 6px;
+          border: none;
+          font-size: 16px;
+          font-weight: bold;
+          color: white;
+          cursor: pointer;
+          }
+          #btnStart { background-color: #28a745; }
+          #btnStop { background-color: #dc3545; display: none; }
 
-        #status {
-            text-align: center;
-            font-size: 16px;
-            font-weight: bold;
-            color: #007bff;
-            margin: 10px 0;
-        }
+          #status {
+          text-align: center;
+          font-size: 16px;
+          font-weight: bold;
+          color: #007bff;
+          margin: 10px 0;
+          }
 
-        .canvas-container {
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin-bottom: 10px;
-        }
-        .canvas-title {
-            font-size: 11px;
-            font-weight: bold;
-            color: #444;
-            margin-bottom: 4px;
-            text-transform: uppercase;
-        }
-        .legend {
-            font-size: 10px;
-            margin-bottom: 4px;
-            text-align: right;
-        }
-        canvas {
-            width: 100%;
-            height: 90px;
-            background-color: #111;
-            border-radius: 4px;
-            display: block;
-        }
-    </style>
-</head>
-<body>
+          .canvas-container {
+          background: white;
+          padding: 10px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          margin-bottom: 10px;
+          }
+          .canvas-title {
+          font-size: 11px;
+          font-weight: bold;
+          color: #444;
+          margin-bottom: 4px;
+          text-transform: uppercase;
+          }
+          .legend {
+          font-size: 10px;
+          margin-bottom: 4px;
+          text-align: right;
+          }
+          canvas {
+          width: 100%;
+          height: 90px;
+          background-color: #111;
+          border-radius: 4px;
+          display: block;
+          }
+        </style>
+      </head>
+      <body>
 
-    <h2>Logger de Datos V2</h2>
-    <div class="subtitle">Detector de Pasos — Estructuras Flotantes</div>
+        <h2>Logger de Datos V2</h2>
+        <div class="subtitle">Detector de Pasos — Estructuras Flotantes</div>
 
-    <div class="control-group">
-        <label for="actividad">Estado / Actividad:</label>
-        <select id="actividad">
+        <div class="control-group">
+          <label for="actividad">Estado / Actividad:</label>
+          <select id="actividad">
             <option value="caminando">Caminando</option>
             <option value="sin_caminando">Sin caminar</option>
-        </select>
+          </select>
 
-        <label for="delay">Comenzar en:</label>
-        <select id="delay">
+          <label for="delay">Comenzar en:</label>
+          <select id="delay">
             <option value="0">0 segundos (Inmediato)</option>
             <option value="5">5 segundos</option>
             <option value="10">10 segundos</option>
             <option value="15">15 segundos</option>
             <option value="30">30 segundos</option>
-        </select>
-    </div>
+          </select>
+        </div>
 
-    <button id="btnStart" onclick="solicitarPermisosYPreparar()">Iniciar Grabación</button>
-    <button id="btnStop" onclick="detenerYProcesar()">Detener Grabación (Corta 3s)</button>
+        <button id="btnStart" onclick="solicitarPermisosYPreparar()">Iniciar Grabación</button>
+        <button id="btnStop" onclick="detenerYProcesar()">Detener Grabación (Corta 3s)</button>
 
-    <div id="status">Listo para registrar</div>
+        <div id="status">Listo para registrar</div>
 
-    <div class="canvas-container">
-        <div class="canvas-title">Monitor de Audio (Micrófono)</div>
-        <canvas id="audioCanvas"></canvas>
-    </div>
+        <div class="canvas-container">
+          <div class="canvas-title">Monitor de Audio (Micrófono)</div>
+          <canvas id="audioCanvas"></canvas>
+        </div>
 
-    <div class="canvas-container">
-        <div class="canvas-title">Acelerómetro Estructural</div>
-        <div class="legend">
+        <div class="canvas-container">
+          <div class="canvas-title">Acelerómetro Estructural</div>
+          <div class="legend">
             <span style="color:#dc3545">■ X</span> |
             <span style="color:#007bff">■ Y</span> |
             <span style="color:#28a745">■ Z</span>
+          </div>
+          <canvas id="accelCanvas"></canvas>
         </div>
-        <canvas id="accelCanvas"></canvas>
-    </div>
 
-    <script>
-        let isRecording = false;
-        let accelData = [];
-        let audioData = []; // Guardado secuencial directo para evitar fallos de compresión
+        <script>
+          let wakeLock = null;
+          let isRecording = false;
+          let accelData = [];
+          let audioData = []; // Guardado secuencial directo para evitar fallos de compresión
 
-        let audioContext = null;
-        let mediaStream = null;
-        let sourceNode = null;
-        let analyserNode = null;
-        let scriptNode = null;
+          let audioContext = null;
+          let mediaStream = null;
+          let sourceNode = null;
+          let analyserNode = null;
+          let scriptNode = null;
 
-        const AUDIO_SAMPLE_RATE = 8000;
+          const AUDIO_SAMPLE_RATE = 8000;
 
-        // Datos instantáneos para las gráficas
-        let ultimoX = 0, ultimoY = 0, ultimoZ = 0;
-        let audioSignalInstantanea = 0;
+          // Datos instantáneos para las gráficas
+          let ultimoX = 0, ultimoY = 0, ultimoZ = 0;
+          let audioSignalInstantanea = 0;
 
-        // Configuración de Canvas
-        const audioCanvas = document.getElementById('audioCanvas');
-        const audioCtx = audioCanvas.getContext('2d');
-        const accelCanvas = document.getElementById('accelCanvas');
-        const accelCtx = accelCanvas.getContext('2d');
+          // Configuración de Canvas
+          const audioCanvas = document.getElementById('audioCanvas');
+          const audioCtx = audioCanvas.getContext('2d');
+          const accelCanvas = document.getElementById('accelCanvas');
+          const accelCtx = accelCanvas.getContext('2d');
 
-        let xHistory = new Array(100).fill(0);
-        let yHistory = new Array(100).fill(0);
-        let zHistory = new Array(100).fill(0);
-        let animationFrameId = null;
+          let xHistory = new Array(100).fill(0);
+          let yHistory = new Array(100).fill(0);
+          let zHistory = new Array(100).fill(0);
+          let animationFrameId = null;
 
-        function ajustarCanvas() {
-            audioCanvas.width = audioCanvas.clientWidth;
-            audioCanvas.height = audioCanvas.clientHeight;
-            accelCanvas.width = accelCanvas.clientWidth;
-            accelCanvas.height = accelCanvas.clientHeight;
-        }
-        window.addEventListener('resize', ajustarCanvas);
-        ajustarCanvas();
+          function ajustarCanvas() {
+          audioCanvas.width = audioCanvas.clientWidth;
+          audioCanvas.height = audioCanvas.clientHeight;
+          accelCanvas.width = accelCanvas.clientWidth;
+          accelCanvas.height = accelCanvas.clientHeight;
+          }
+          window.addEventListener('resize', ajustarCanvas);
+          ajustarCanvas();
 
-        async function solicitarPermisosYPreparar() {
-            audioCtx.fillStyle = '#111';
-            audioCtx.fillRect(0, 0, audioCanvas.width, audioCanvas.height);
-            accelCtx.fillStyle = '#111';
-            accelCtx.fillRect(0, 0, accelCanvas.width, accelCanvas.height);
+          async function solicitarPermisosYPreparar() {
+          audioCtx.fillStyle = '#111';
+          audioCtx.fillRect(0, 0, audioCanvas.width, audioCanvas.height);
+          accelCtx.fillStyle = '#111';
+          accelCtx.fillRect(0, 0, accelCanvas.width, accelCanvas.height);
 
-            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                try {
-                    const permissionState = await DeviceMotionEvent.requestPermission();
-                    if (permissionState !== 'granted') {
-                        alert('Permiso de acelerómetro denegado.');
-                        return;
-                    }
-                } catch (error) {
-                    alert('Error en sensores de movimiento: ' + error);
-                    return;
-                }
-            }
+          if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+          try {
+          const permissionState = await DeviceMotionEvent.requestPermission();
+          if (permissionState !== 'granted') {
+          alert('Permiso de acelerómetro denegado.');
+          return;
+          }
+          } catch (error) {
+          alert('Error en sensores de movimiento: ' + error);
+          return;
+          }
+          }
 
-            const delaySeconds = parseInt(document.getElementById('delay').value);
-            document.getElementById('btnStart').style.display = 'none';
+          const delaySeconds = parseInt(document.getElementById('delay').value);
+          document.getElementById('btnStart').style.display = 'none';
 
-            if (delaySeconds > 0) {
-                let timeLeft = delaySeconds;
-                const statusDiv = document.getElementById('status');
-                statusDiv.innerText = `⏳ Iniciando en ${timeLeft}s...`;
-                statusDiv.style.color = "#fd7e14";
+          if (delaySeconds > 0) {
+          let timeLeft = delaySeconds;
+          const statusDiv = document.getElementById('status');
+          statusDiv.innerText = `⏳ Iniciando en ${timeLeft}s...`;
+          statusDiv.style.color = "#fd7e14";
 
-                const countdown = setInterval(() => {
-                    timeLeft--;
-                    if (timeLeft > 0) {
-                        statusDiv.innerText = `⏳ Iniciando en ${timeLeft}s...`;
-                    } else {
-                        clearInterval(countdown);
-                        iniciarGrabacion();
-                    }
-                }, 1000);
-            } else {
-                iniciarGrabacion();
-            }
-        }
+          const countdown = setInterval(() => {
+          timeLeft--;
+          if (timeLeft > 0) {
+          statusDiv.innerText = `⏳ Iniciando en ${timeLeft}s...`;
+          } else {
+          clearInterval(countdown);
+          iniciarGrabacion();
+          }
+          }, 1000);
+          } else {
+          iniciarGrabacion();
+          }
+          }
 
-        async function iniciarGrabacion() {
-            accelData = [];
-            audioData = [];
-            xHistory.fill(0); yHistory.fill(0); zHistory.fill(0);
+          async function iniciarGrabacion() {
+          accelData = [];
+          audioData = [];
+          xHistory.fill(0); yHistory.fill(0); zHistory.fill(0);
 
-            try {
-                mediaStream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: false,
-                        noiseSuppression: false,
-                        autoGainControl: false
-                    },
-                    video: false
-                });
+          // Solicitar que la pantalla no se apague
+          try {
+          wakeLock = await navigator.wakeLock.request('screen');
+          console.log('Pantalla bloqueada para que no se apague');
+          } catch (err) {
+          console.warn('Wake Lock falló o no está soportado:', err);
+          }
+          
+          try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+          },
+          video: false
+          });
 
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                // Forzamos la tasa de muestreo desde el inicio del contexto nativo
-                audioContext = new AudioContextClass({ sampleRate: AUDIO_SAMPLE_RATE });
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          // Forzamos la tasa de muestreo desde el inicio del contexto nativo
+          audioContext = new AudioContextClass({ sampleRate: AUDIO_SAMPLE_RATE });
 
-                if (audioContext.state === 'suspended') {
-                    await audioContext.resume();
-                }
+          if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+          }
 
-                sourceNode = audioContext.createMediaStreamSource(mediaStream);
+          sourceNode = audioContext.createMediaStreamSource(mediaStream);
 
-                // Nodo analizador ligero exclusivo para actualizar la gráfica
-                analyserNode = audioContext.createAnalyser();
-                analyserNode.fftSize = 64;
+          // Nodo analizador ligero exclusivo para actualizar la gráfica
+          analyserNode = audioContext.createAnalyser();
+          analyserNode.fftSize = 64;
 
-                // Procesador por muestras síncrono estándar (Modo seguro en móviles)
-                scriptNode = audioContext.createScriptProcessor(2048, 1, 1);
+          // Procesador por muestras síncrono estándar (Modo seguro en móviles)
+          scriptNode = audioContext.createScriptProcessor(2048, 1, 1);
 
-                scriptNode.onaudioprocess = function(e) {
-                    if (!isRecording) return;
-                    const inputData = e.inputBuffer.getChannelData(0);
+          scriptNode.onaudioprocess = function(e) {
+          if (!isRecording) return;
+          const inputData = e.inputBuffer.getChannelData(0);
 
-                    // Almacenamiento directo secuencial ultraligero
-                    for (let i = 0; i < inputData.length; i++) {
-                        audioData.push(inputData[i]);
-                    }
+          // Almacenamiento directo secuencial ultraligero
+          for (let i = 0; i < inputData.length; i++) {
+          audioData.push(inputData[i]);
+          }
 
-                    // Extraer un valor muestra para la gráfica de audio de forma segura
-                    audioSignalInstantanea = inputData[0];
-                };
+          // Extraer un valor muestra para la gráfica de audio de forma segura
+          audioSignalInstantanea = inputData[0];
+          };
 
-                // Enrutamiento directo sin compresión intermedia
-                sourceNode.connect(analyserNode);
-                sourceNode.connect(scriptNode);
-                scriptNode.connect(audioContext.destination);
+          // Enrutamiento directo sin compresión intermedia
+          sourceNode.connect(analyserNode);
+          sourceNode.connect(scriptNode);
+          scriptNode.connect(audioContext.destination);
 
-                window.addEventListener('devicemotion', capturarMovimiento);
+          window.addEventListener('devicemotion', capturarMovimiento);
 
-                isRecording = true;
-                document.getElementById('btnStop').style.display = 'block';
-                const statusDiv = document.getElementById('status');
-                statusDiv.innerText = '🔴 GRABANDO DATOS FIABLES...';
-                statusDiv.style.color = '#dc3545';
+          isRecording = true;
+          document.getElementById('btnStop').style.display = 'block';
+          const statusDiv = document.getElementById('status');
+          statusDiv.innerText = '🔴 GRABANDO DATOS FIABLES...';
+          statusDiv.style.color = '#dc3545';
 
-                dibujarGraficos();
+          dibujarGraficos();
 
-            } catch (err) {
-                console.error(err);
-                alert("Error de hardware: " + err.name + " - " + err.message);
-                document.getElementById('btnStart').style.display = 'block';
-            }
-        }
+          } catch (err) {
+          console.error(err);
+          alert("Error de hardware: " + err.name + " - " + err.message);
+          document.getElementById('btnStart').style.display = 'block';
+          }
+          }
 
-        function capturarMovimiento(event) {
-            if (!isRecording) return;
-            const t = Date.now();
+          function capturarMovimiento(event) {
+          if (!isRecording) return;
+          const t = Date.now();
 
-            const x = event.accelerationIncludingGravity.x ? event.accelerationIncludingGravity.x.toFixed(4) : 0;
-            const y = event.accelerationIncludingGravity.y ? event.accelerationIncludingGravity.y.toFixed(4) : 0;
-            const z = event.accelerationIncludingGravity.z ? event.accelerationIncludingGravity.z.toFixed(4) : 0;
+          const x = event.accelerationIncludingGravity.x ? event.accelerationIncludingGravity.x.toFixed(4) : 0;
+          const y = event.accelerationIncludingGravity.y ? event.accelerationIncludingGravity.y.toFixed(4) : 0;
+          const z = event.accelerationIncludingGravity.z ? event.accelerationIncludingGravity.z.toFixed(4) : 0;
 
-            ultimoX = parseFloat(x);
-            ultimoY = parseFloat(y);
-            ultimoZ = parseFloat(z);
+          ultimoX = parseFloat(x);
+          ultimoY = parseFloat(y);
+          ultimoZ = parseFloat(z);
 
-            accelData.push({ t, x, y, z });
-        }
+          accelData.push({ t, x, y, z });
+          }
 
-        function dibujarGraficos() {
-            if (!isRecording) return;
-            animationFrameId = requestAnimationFrame(dibujarGraficos);
+          function dibujarGraficos() {
+          if (!isRecording) return;
+          animationFrameId = requestAnimationFrame(dibujarGraficos);
 
-            // --- GRÁFICA DE AUDIO (Historial oscilante simplificado) ---
-            audioCtx.fillStyle = '#111';
-            audioCtx.fillRect(0, 0, audioCanvas.width, audioCanvas.height);
+          // --- GRÁFICA DE AUDIO (Historial oscilante simplificado) ---
+          audioCtx.fillStyle = '#111';
+          audioCtx.fillRect(0, 0, audioCanvas.width, audioCanvas.height);
 
-            // Generamos una animación de onda simple basada en la amplitud instantánea capturada
-            audioCtx.lineWidth = 2;
-            audioCtx.strokeStyle = '#007bff';
-            audioCtx.beginPath();
-            audioCtx.moveTo(0, audioCanvas.height / 2);
+          // Generamos una animación de onda simple basada en la amplitud instantánea capturada
+          audioCtx.lineWidth = 2;
+          audioCtx.strokeStyle = '#007bff';
+          audioCtx.beginPath();
+          audioCtx.moveTo(0, audioCanvas.height / 2);
 
-            // Simular trazo de onda basado en la actividad real del micrófono
-            let amplitudVisual = audioSignalInstantanea * audioCanvas.height;
-            audioCtx.lineTo(audioCanvas.width / 2, (audioCanvas.height / 2) + amplitudVisual);
-            audioCtx.lineTo(audioCanvas.width, audioCanvas.height / 2);
-            audioCtx.stroke();
+          // Simular trazo de onda basado en la actividad real del micrófono
+          let amplitudVisual = audioSignalInstantanea * audioCanvas.height;
+          audioCtx.lineTo(audioCanvas.width / 2, (audioCanvas.height / 2) + amplitudVisual);
+          audioCtx.lineTo(audioCanvas.width, audioCanvas.height / 2);
+          audioCtx.stroke();
 
-            // --- GRÁFICA DEL ACELERÓMETRO (3 EJES SIMULTÁNEOS) ---
-            xHistory.push(ultimoX); xHistory.shift();
-            yHistory.push(ultimoY); yHistory.shift();
-            zHistory.push(ultimoZ); zHistory.shift();
+          // --- GRÁFICA DEL ACELERÓMETRO (3 EJES SIMULTÁNEOS) ---
+          xHistory.push(ultimoX); xHistory.shift();
+          yHistory.push(ultimoY); yHistory.shift();
+          zHistory.push(ultimoZ); zHistory.shift();
 
-            accelCtx.fillStyle = '#111';
-            accelCtx.fillRect(0, 0, accelCanvas.width, accelCanvas.height);
-            accelCtx.lineWidth = 1.8;
+          accelCtx.fillStyle = '#111';
+          accelCtx.fillRect(0, 0, accelCanvas.width, accelCanvas.height);
+          accelCtx.lineWidth = 1.8;
 
-            const stepX = accelCanvas.width / (zHistory.length - 1);
+          const stepX = accelCanvas.width / (zHistory.length - 1);
 
-            function dibujarEje(historial, color) {
-                accelCtx.strokeStyle = color;
-                accelCtx.beginPath();
-                for (let i = 0; i < historial.length; i++) {
-                    const valorNormalizado = (historial[i] / 30) + 0.5; // Escala +-15 m/s^2
-                    const yAccel = accelCanvas.height - (valorNormalizado * accelCanvas.height);
-                    if (i === 0) accelCtx.moveTo(0, yAccel);
-                    else accelCtx.lineTo(i * stepX, yAccel);
-                }
-                accelCtx.stroke();
-            }
+          function dibujarEje(historial, color) {
+          accelCtx.strokeStyle = color;
+          accelCtx.beginPath();
+          for (let i = 0; i < historial.length; i++) {
+          const valorNormalizado = (historial[i] / 30) + 0.5; // Escala +-15 m/s^2
+          const yAccel = accelCanvas.height - (valorNormalizado * accelCanvas.height);
+          if (i === 0) accelCtx.moveTo(0, yAccel);
+          else accelCtx.lineTo(i * stepX, yAccel);
+          }
+          accelCtx.stroke();
+          }
 
-            dibujarEje(xHistory, '#dc3545'); // X -> Rojo
-            dibujarEje(yHistory, '#007bff'); // Y -> Azul
-            dibujarEje(zHistory, '#28a745'); // Z -> Verde
+          dibujarEje(xHistory, '#dc3545'); // X -> Rojo
+          dibujarEje(yHistory, '#007bff'); // Y -> Azul
+          dibujarEje(zHistory, '#28a745'); // Z -> Verde
 
-            // Línea central de referencia (0G)
-            accelCtx.lineWidth = 1;
-            accelCtx.strokeStyle = '#333';
-            accelCtx.setLineDash([5, 5]);
-            accelCtx.beginPath();
-            accelCtx.moveTo(0, accelCanvas.height / 2);
-            accelCtx.lineTo(accelCanvas.width, accelCanvas.height / 2);
-            accelCtx.stroke();
-            accelCtx.setLineDash([]);
-        }
+          // Línea central de referencia (0G)
+          accelCtx.lineWidth = 1;
+          accelCtx.strokeStyle = '#333';
+          accelCtx.setLineDash([5, 5]);
+          accelCtx.beginPath();
+          accelCtx.moveTo(0, accelCanvas.height / 2);
+          accelCtx.lineTo(accelCanvas.width, accelCanvas.height / 2);
+          accelCtx.stroke();
+          accelCtx.setLineDash([]);
+          }
 
-        function detenerYProcesar() {
-            const momentoDetener = Date.now();
-            isRecording = false;
+          function detenerYProcesar() {
+          const momentoDetener = Date.now();
+          isRecording = false;
 
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            window.removeEventListener('devicemotion', capturarMovimiento);
+          if (animationFrameId) cancelAnimationFrame(animationFrameId);
+          window.removeEventListener('devicemotion', capturarMovimiento);
 
-            if (scriptNode) scriptNode.disconnect();
-            if (sourceNode) sourceNode.disconnect();
-            if (audioContext) audioContext.close();
-            if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+          if (scriptNode) scriptNode.disconnect();
+          if (sourceNode) sourceNode.disconnect();
+          if (audioContext) audioContext.close();
+          if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
 
-            document.getElementById('btnStop').style.display = 'none';
-            const statusDiv = document.getElementById('status');
-            statusDiv.innerText = 'Guardando datos estructurales...';
-            statusDiv.style.color = '#007bff';
+          document.getElementById('btnStop').style.display = 'none';
+          const statusDiv = document.getElementById('status');
+          statusDiv.innerText = 'Guardando datos estructurales...';
+          statusDiv.style.color = '#007bff';
 
-            // --- RECORTE DE LOS ÚLTIMOS 3 SEGUNDOS ---
-            // 1. Acelerómetro
-            const tiempoLimiteSensado = momentoDetener - 3000;
-            const accelFiltrado = accelData.filter(dato => dato.t <= tiempoLimiteSensado);
+          // --- RECORTE DE LOS ÚLTIMOS 3 SEGUNDOS ---
+          // 1. Acelerómetro
+          const tiempoLimiteSensado = momentoDetener - 3000;
+          const accelFiltrado = accelData.filter(dato => dato.t <= tiempoLimiteSensado);
 
-            // 2. Audio (3 segundos * 8000 muestras/seg = 24000 muestras)
-            const muestrasAEliminar = 3 * AUDIO_SAMPLE_RATE;
-            const audioFiltrado = audioData.slice(0, -muestrasAEliminar);
+          // 2. Audio (3 segundos * 8000 muestras/seg = 24000 muestras)
+          const muestrasAEliminar = 3 * AUDIO_SAMPLE_RATE;
+          const audioFiltrado = audioData.slice(0, -muestrasAEliminar);
 
-            // Alerta informativa del tamaño de los arreglos recuperados
-            alert(`Captura Exitosa.\nAcelerómetro: ${accelFiltrado.length} filas.\nAudio: ${audioFiltrado.length} muestras crudas.`);
+          // Alerta informativa del tamaño de los arreglos recuperados
+          alert(`Captura Exitosa.\nAcelerómetro: ${accelFiltrado.length} filas.\nAudio: ${audioFiltrado.length} muestras crudas.`);
 
-            // --- GENERACIÓN DE NOMBRES UNIFICADOS ---
-            const actividad = document.getElementById('actividad').value;
-            const ahora = new Date();
-            const pad = (n) => n < 10 ? '0' + n : n;
-            const fechaStr = ahora.getFullYear() + pad(ahora.getMonth() + 1) + pad(ahora.getDate()) + "_" + pad(ahora.getHours()) + pad(ahora.getMinutes()) + pad(ahora.getSeconds());
-            const nombreBase = `${actividad}_${fechaStr}`;
+          // --- GENERACIÓN DE NOMBRES UNIFICADOS ---
+          const actividad = document.getElementById('actividad').value;
+          const ahora = new Date();
+          const pad = (n) => n < 10 ? '0' + n : n;
+          const fechaStr = ahora.getFullYear() + pad(ahora.getMonth() + 1) + pad(ahora.getDate()) + "_" + pad(ahora.getHours()) + pad(ahora.getMinutes()) + pad(ahora.getSeconds());
+          const nombreBase = `${actividad}_${fechaStr}`;
 
-            // --- EXPORTAR ARCHIVO 1: CSV DEL ACELERÓMETRO ---
-            let contenidoCSV = "timestamp_ms,x,y,z\n";
-            accelFiltrado.forEach(fila => {
-                contenidoCSV += `${fila.t},${fila.x},${fila.y},${fila.z}\n`;
-            });
-            descargarArchivo(nombreBase + "_acelerometro.csv", new Blob([contenidoCSV], { type: 'text/csv;charset=utf-8;' }));
+          // --- EXPORTAR ARCHIVO 1: CSV DEL ACELERÓMETRO ---
+          let contenidoCSV = "timestamp_ms,x,y,z\n";
+          accelFiltrado.forEach(fila => {
+          contenidoCSV += `${fila.t},${fila.x},${fila.y},${fila.z}\n`;
+          });
+          descargarArchivo(nombreBase + "_acelerometro.csv", new Blob([contenidoCSV], { type: 'text/csv;charset=utf-8;' }));
 
-            // --- EXPORTAR ARCHIVO 2: WAV BINARIO DE AUDIO ---
-            const wavBuffer = estructuraWAV(audioFiltrado, AUDIO_SAMPLE_RATE);
-            descargarArchivo(nombreBase + "_audio.wav", new Blob([wavBuffer], { type: 'audio/wav' }));
+          // --- EXPORTAR ARCHIVO 2: WAV BINARIO DE AUDIO ---
+          const wavBuffer = estructuraWAV(audioFiltrado, AUDIO_SAMPLE_RATE);
+          descargarArchivo(nombreBase + "_audio.wav", new Blob([wavBuffer], { type: 'audio/wav' }));
 
-            statusDiv.innerText = '✅ ¡Guardado en Downloads!';
-            statusDiv.style.color = '#28a745';
-            document.getElementById('btnStart').style.display = 'block';
-        }
+          statusDiv.innerText = '✅ ¡Guardado en Downloads!';
+          statusDiv.style.color = '#28a745';
+          document.getElementById('btnStart').style.display = 'block';
 
-        function descargarArchivo(nombre, blob) {
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = nombre;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
+          // Permitir que la pantalla se vuelva a apagar
+          if (wakeLock !== null) {
+          wakeLock.release().then(() => {
+          wakeLock = null;
+          });
+          }
+          }
 
-        // Conversor PCM directo a Estructura Binaria WAV 16-Bit Mono
-        function estructuraWAV(muestras, sampleRate) {
-            const buffer = new ArrayBuffer(44 + muestras.length * 2);
-            const view = new DataView(buffer);
+          function descargarArchivo(nombre, blob) {
+          const link = document.createElement("a");
+          link.href = URL.createObjectURL(blob);
+          link.download = nombre;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          }
 
-            escribirStringEnBytes(view, 0, 'RIFF');
-            view.setUint32(4, 36 + muestras.length * 2, true);
-            escribirStringEnBytes(view, 8, 'WAVE');
-            escribirStringEnBytes(view, 12, 'fmt ');
-            view.setUint32(16, 16, true);
-            view.setUint16(20, 1, true);
-            view.setUint16(22, 1, true);
-            view.setUint32(24, sampleRate, true);
-            view.setUint32(28, sampleRate * 2, true);
-            view.setUint16(32, 2, true);
-            view.setUint16(34, 16, true);
-            escribirStringEnBytes(view, 36, 'data');
-            view.setUint32(40, muestras.length * 2, true);
+          // Conversor PCM directo a Estructura Binaria WAV 16-Bit Mono
+          function estructuraWAV(muestras, sampleRate) {
+          const buffer = new ArrayBuffer(44 + muestras.length * 2);
+          const view = new DataView(buffer);
 
-            let offset = 44;
-            for (let i = 0; i < muestras.length; i++, offset += 2) {
-                let s = Math.max(-1, Math.min(1, muestras[i]));
-                view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
-            }
-            return buffer;
-        }
+          escribirStringEnBytes(view, 0, 'RIFF');
+          view.setUint32(4, 36 + muestras.length * 2, true);
+          escribirStringEnBytes(view, 8, 'WAVE');
+          escribirStringEnBytes(view, 12, 'fmt ');
+          view.setUint32(16, 16, true);
+          view.setUint16(20, 1, true);
+          view.setUint16(22, 1, true);
+          view.setUint32(24, sampleRate, true);
+          view.setUint32(28, sampleRate * 2, true);
+          view.setUint16(32, 2, true);
+          view.setUint16(34, 16, true);
+          escribirStringEnBytes(view, 36, 'data');
+          view.setUint32(40, muestras.length * 2, true);
 
-        function escribirStringEnBytes(view, offset, string) {
-            for (let i = 0; i < string.length; i++) {
-                view.setUint8(offset + i, string.charCodeAt(i));
-            }
-        }
-    </script>
-</body>
-</html>
+          let offset = 44;
+          for (let i = 0; i < muestras.length; i++, offset += 2) {
+          let s = Math.max(-1, Math.min(1, muestras[i]));
+          view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+          }
+          return buffer;
+          }
+
+          function escribirStringEnBytes(view, offset, string) {
+          for (let i = 0; i < string.length; i++) {
+          view.setUint8(offset + i, string.charCodeAt(i));
+          }
+          }
+        </script>
+      </body>
+    </html>
