@@ -3,9 +3,8 @@ function graficador(basename)
     % Graficador de Datos: Proyecto Detección de Pasos en Estructura Flotante
     % =========================================================================
     % Uso en consola: graficador('nombre_del_archivo_sin_extensiones')
-    % Ejemplo: graficador('caminando_20260520_081915')
 
-    % 1. Definir los nombres de los archivos usando el basename
+    % 1. Definir los nombres de los archivos
     archivo_csv = [basename, '_acelerometro.csv'];
     archivo_wav = [basename, '_audio.wav'];
 
@@ -14,8 +13,6 @@ function graficador(basename)
     % -------------------------------------------------------------------------
     disp('Cargando datos de audio...');
     [audio_data, fs_audio] = audioread(archivo_wav);
-
-    % Crear vector de tiempo para el audio (en segundos)
     t_audio = (0:length(audio_data)-1) / fs_audio;
 
     % -------------------------------------------------------------------------
@@ -35,24 +32,49 @@ function graficador(basename)
     y = accel_data(:, 3);
     z = accel_data(:, 4);
 
-    % Normalización Segura (Previene NaNs por división por cero)
+    % Normalización Segura
     if max(abs(x)) ~= 0, x = x ./ max(abs(x)); end
     if max(abs(y)) ~= 0, y = y ./ max(abs(y)); end
     if max(abs(z)) ~= 0, z = z ./ max(abs(z)); end
 
     % SEPARACIÓN EN ALTURA (Offset)
-    % El eje X se queda en 0. Sumamos 1 al eje Y, y 2 al eje Z.
     y = y + 1;
     z = z + 2;
 
     % Normalizar el tiempo del acelerómetro para que empiece en 0 segundos
     t_accel = (t_ms - t_ms(1)) / 1000;
     
-    % Calcular el tiempo máximo para ajustar el tamaño de los gráficos
-    t_max = max(max(t_audio), max(t_accel));
+    % -------------------------------------------------------------------------
+    % 4. DETECCIÓN Y RECORTE DE DATOS ÚTILES (NUEVO)
+    % -------------------------------------------------------------------------
+    % Calculamos la longitud real de cada registro
+    t_max_audio = max(t_audio);
+    t_max_accel = max(t_accel);
+    
+    % La "parte buena" es el tiempo mínimo donde ambas señales existen
+    t_util = min(t_max_audio, t_max_accel);
+    
+    % Si hay una diferencia mayor a 0.1 segundos, informamos al usuario
+    if abs(t_max_audio - t_max_accel) > 0.1
+        fprintf('\n--- AVISO DE SINCRONIZACIÓN ---\n');
+        fprintf('Se detectó un corte asimétrico en la recolección de datos.\n');
+        fprintf('Longitud Audio: %.2f seg | Longitud Acelerómetro: %.2f seg\n', t_max_audio, t_max_accel);
+        fprintf('Recortando archivos a la parte útil y sincronizada: %.2f seg\n\n', t_util);
+    end
+
+    % Recortamos los arreglos usando indexación lógica
+    idx_audio = t_audio <= t_util;
+    t_audio = t_audio(idx_audio);
+    audio_data = audio_data(idx_audio);
+
+    idx_accel = t_accel <= t_util;
+    t_accel = t_accel(idx_accel);
+    x = x(idx_accel);
+    y = y(idx_accel);
+    z = z(idx_accel);
 
     % -------------------------------------------------------------------------
-    % 4. Graficación Sincronizada
+    % 5. Graficación Sincronizada
     % -------------------------------------------------------------------------
     disp('Generando gráficas...');
     figure('Name', ['Análisis de Pasos - Muestra: ', basename], 'Position', [100, 100, 800, 600]);
@@ -64,7 +86,7 @@ function graficador(basename)
     xlabel('Tiempo (Segundos)');
     ylabel('Amplitud');
     grid on;
-    xlim([0 t_max]); % Ajustar tamaño de la gráfica al máximo de la muestra
+    xlim([0 t_util]); % Usamos t_util en lugar del antiguo t_max
 
     % --- Subplot 2: Acelerómetro Normalizado y Separado ---
     subplot(2, 1, 2);
@@ -75,15 +97,12 @@ function graficador(basename)
     title('Movimiento Estructural (Acelerómetro)');
     xlabel('Tiempo (Segundos)');
     
-    % Cambiar las etiquetas del eje Y para que muestren los ejes correspondientes en lugar de números
     yticks([0 1 2]);
     yticklabels({'Eje X', 'Eje Y', 'Eje Z'});
-    
-    % legend('Eje X', 'Eje Y', 'Eje Z', 'Location', 'northeast'); % Opcional, ya está claro con los yticks
     grid on;
-    xlim([0 t_max]); % Ajustar tamaño de la gráfica al máximo de la muestra
+    xlim([0 t_util]); 
 
-    % Vincular los ejes X de ambas gráficas para hacer Zoom simultáneo
+    % Vincular los ejes X de ambas gráficas
     linkaxes(findall(gcf,'type','axes'), 'x');
 
     disp('¡Gráficas generadas con éxito!');
