@@ -13,21 +13,21 @@ function graficador(basename)
     % -------------------------------------------------------------------------
     disp('Cargando datos de audio...');
     [audio_data, fs_audio] = audioread(archivo_wav);
-    t_audio = (0:length(audio_data)-1) / fs_audio;
+    t_audio = (0:length(audio_data)-1)' / fs_audio;
+
+    % Imprimimos info de depuración del audio
+    fprintf(' -> Audio cargado: %.2f segundos a %d Hz\n', max(t_audio), fs_audio);
+    fprintf(' -> Amplitud máxima del micro: %.4f\n', max(abs(audio_data)));
 
     % -------------------------------------------------------------------------
     % 3. Procesamiento del Acelerómetro (.csv)
     % -------------------------------------------------------------------------
     disp('Cargando datos del acelerómetro...');
-    accel_data = csvread(archivo_csv);
 
-    % Limpieza de encabezados si existen
-    if accel_data(1, 1) < 1000000
-        accel_data(1, :) = [];
-    end
+    % Usar dlmread para saltar la primera fila (cabecera)
+    accel_data = dlmread(archivo_csv, ',', 1, 0);
 
-    % Extraer columnas
-    t_ms = accel_data(:, 1);
+    % Extraer columnas de aceleración (IGNORAMOS LA COLUMNA 1 DE TIEMPO)
     x = accel_data(:, 2);
     y = accel_data(:, 3);
     z = accel_data(:, 4);
@@ -37,11 +37,11 @@ function graficador(basename)
     if max(abs(y)) ~= 0, y = y ./ max(abs(y)); end
     if max(abs(z)) ~= 0, z = z ./ max(abs(z)); end
 
-    % [MODIFICACIÓN] Se eliminan los offsets (y = y + 1; z = z + 2;)
-    % porque ahora cada eje se grafica en su propio subeje independiente.
+    % [NUEVO]: Forzamos la creación del tiempo matemáticamente a 50Hz
+    fs_accel = 50;
+    t_accel = (0:length(x)-1)' / fs_accel;
 
-    % Normalizar el tiempo del acelerómetro para que empiece en 0 segundos
-    t_accel = (t_ms - t_ms(1)) / 1000;
+    fprintf(' -> Acelerómetro cargado: %.2f segundos (asumiendo %d Hz)\n', max(t_accel), fs_accel);
 
     % -------------------------------------------------------------------------
     % 4. DETECCIÓN Y RECORTE DE DATOS ÚTILES
@@ -51,11 +51,15 @@ function graficador(basename)
 
     t_util = min(t_max_audio, t_max_accel);
 
+    % Medida de seguridad extra por si los archivos están vacíos
+    if isempty(t_util) || t_util <= 0
+        t_util = 0.1;
+    end
+
     if abs(t_max_audio - t_max_accel) > 0.1
         fprintf('\n--- AVISO DE SINCRONIZACIÓN ---\n');
         fprintf('Se detectó un corte asimétrico en la recolección de datos.\n');
-        fprintf('Longitud Audio: %.2f seg | Longitud Acelerómetro: %.2f seg\n', t_max_audio, t_max_accel);
-        fprintf('Recortando archivos a la parte útil y sincronizada: %.2f seg\n\n', t_util);
+        fprintf('Recortando ambos archivos a la parte útil sincronizada: %.2f seg\n\n', t_util);
     end
 
     % Recortamos los arreglos usando indexación lógica
@@ -73,13 +77,8 @@ function graficador(basename)
     % 5. Graficación Sincronizada (4 subplots independientes)
     % -------------------------------------------------------------------------
     disp('Generando gráficas...');
-    % Obtener el tamaño de la pantalla actual [X_inicio, Y_inicio, Ancho, Alto]
     screen_size = get(0, 'ScreenSize');
-
-    % Crear la figura ocupando el 100% del ancho y alto detectados
     figure('Name', ['Análisis de Pasos - Muestra: ', basename], 'Position', screen_size);
-
-    % figure('Name', ['Análisis de Pasos - Muestra: ', basename], 'Position', [100, 50, 900, 800]);
 
     % --- Subplot 1: Señal de Audio ---
     subplot(4, 1, 1);
