@@ -1,9 +1,9 @@
 #include "app_core.h"
 
 // --- NUEVOS INCLUDES DEL HARDWARE DIVIDIDO ---
-#include "hw_imu.h"
-#include "hw_mic.h"
-#include "gui.h"
+#include "hardware/hw_imu.h"
+#include "hardware/hw_mic.h"
+#include "gui/gui.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -16,8 +16,9 @@
 #include "esp_wifi.h"
 #include "esp_event.h"
 #include <string.h>
+#include "esp_netif.h"
 
-#include "hw_rtc.h"
+#include "hardware/hw_rtc.h"
 
 static const char *TAG = "APP_CORE";
 static volatile estado_logger_t estado_actual = ESTADO_REPOSO;
@@ -154,7 +155,7 @@ void app_core_guardar_wifi(const char* ssid, const char* pass) {
 void app_core_wifi_init(void) {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_create_default_wifi_sta();
+    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -189,11 +190,48 @@ void app_core_wifi_init(void) {
         ESP_LOGI(TAG, "No hay credenciales WiFi en NVS. Modo espera.");
     }
 
+
+
+    // Inyectar el hostname guardado <---
+    char dev_name[MAX_DEV_NAME_LEN];
+    app_core_get_device_name(dev_name, sizeof(dev_name));
+    esp_netif_set_hostname(sta_netif, dev_name);
+
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
 }
 
+void app_core_set_device_name(const char* name) {
+    nvs_handle_t my_handle;
+    if (nvs_open("storage", NVS_READWRITE, &my_handle) == ESP_OK) {
+        nvs_set_str(my_handle, "dev_name", name);
+        nvs_commit(my_handle);
+        nvs_close(my_handle);
+
+        ESP_LOGI(TAG, "Nombre de equipo guardado en NVS: %s", name);
+
+        // Actualizamos el hostname de red en caliente (por si ya estamos conectados)
+        esp_netif_t *netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+        if (netif) {
+            esp_netif_set_hostname(netif, name);
+        }
+    }
+}
+
+void app_core_get_device_name(char* out_name, size_t max_len) {
+    nvs_handle_t my_handle;
+    // Nombre por defecto por si es la primera vez que arranca la placa
+    strncpy(out_name, "Datalogger_ESP", max_len);
+
+    if (nvs_open("storage", NVS_READONLY, &my_handle) == ESP_OK) {
+        size_t required_size = max_len;
+        if (nvs_get_str(my_handle, "dev_name", out_name, &required_size) == ESP_OK) {
+            ESP_LOGI(TAG, "Nombre de equipo cargado: %s", out_name);
+        }
+        nvs_close(my_handle);
+    }
+}
 
 void app_core_set_estado(estado_logger_t nuevo_estado) { estado_actual = nuevo_estado; }
 estado_logger_t app_core_get_estado(void) { return estado_actual; }

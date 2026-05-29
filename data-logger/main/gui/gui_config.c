@@ -1,4 +1,6 @@
 #include "gui_screens.h"
+#include "gui_hostname.h"
+#include "../app_core.h"
 
 // Callbacks específicos de navegación interna
 static void btn_ir_pasos_cb(lv_event_t * e) {
@@ -7,6 +9,12 @@ static void btn_ir_pasos_cb(lv_event_t * e) {
 
 static void btn_ir_wifi_cb(lv_event_t * e) {
     if(lv_event_get_code(e) == LV_EVENT_CLICKED) lv_scr_load(scr_wifi);
+}
+
+static void btn_abrir_hostname_cb(lv_event_t * e) {
+    if(lv_event_get_code(e) == LV_EVENT_CLICKED) {
+        lv_scr_load(scr_hostname);
+    }
 }
 
 void gui_crear_pantalla_config(void) {
@@ -33,16 +41,20 @@ void gui_crear_pantalla_config(void) {
     lv_list_add_btn(list_conf, LV_SYMBOL_SETTINGS, " Servidor MQTT");
 
     lv_list_add_text(list_conf, "Dispositivo");
-    lv_list_add_btn(list_conf, LV_SYMBOL_EDIT, " Nombre Equipo");
+
+    lv_obj_t * list_btn_hostname = lv_list_add_btn(list_conf, LV_SYMBOL_EDIT, " Nombre Equipo");
+    lv_obj_add_event_cb(list_btn_hostname, btn_abrir_hostname_cb, LV_EVENT_ALL, NULL);
+
     lv_list_add_btn(list_conf, LV_SYMBOL_BELL, " Sensores / Hardware");
     lv_list_add_btn(list_conf, LV_SYMBOL_FILE, " Reloj (RTC)");
 
+    // --- CAMBIO AQUÍ: Consistencia con gui_pasos.c (Abajo a la derecha y gris) ---
     lv_obj_t * btn_volverc = lv_btn_create(scr_config);
-    lv_obj_set_size(btn_volverc, 160, 50);
-    lv_obj_align(btn_volverc, LV_ALIGN_BOTTOM_MID, 0, -10);
+    lv_obj_set_size(btn_volverc, 140, 50);
+    lv_obj_align(btn_volverc, LV_ALIGN_BOTTOM_RIGHT, -20, -20);
     lv_obj_set_style_bg_color(btn_volverc, lv_palette_main(LV_PALETTE_GREY), 0);
     lv_obj_add_event_cb(btn_volverc, btn_volver_cb, LV_EVENT_ALL, NULL);
-    
+
     lv_obj_t * lbl_volverc = lv_label_create(btn_volverc);
     lv_label_set_text(lbl_volverc, "Volver");
     lv_obj_center(lbl_volverc);

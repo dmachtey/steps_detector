@@ -1,29 +1,26 @@
 idf_component_register(
     SRCS
-        # Archivo Principal
         "main.c"
-
-        # Lógica de la Aplicación (WiFi, NVS, Colas)
         "app_core.c"
+        "hardware/hardware.c"
+        "hardware/hw_display.c"
+        "hardware/hw_imu.c"
+        "hardware/hw_mic.c"
+        "hardware/hw_sd.c"
+        "hardware/hw_rtc.c"
+        "gui/gui.c"
+        "gui/gui_hw.c"
+        "gui/gui_main.c"
+        "gui/gui_alarma.c"
+        "gui/gui_config.c"
+        "gui/gui_pasos.c"
+        "gui/gui_wifi.c"
+        "gui/gui_hostname.c"
 
-        # Gestores de Hardware (BSP)
-        "hardware.c"
-        "hw_display.c"
-        "hw_imu.c"
-        "hw_mic.c"
-        "hw_sd.c"
-        "hw_rtc.c"
-
-        # Motor y Pantallas de la Interfaz (LVGL)
-        "gui_hw.c"
-        "gui.c"
-        "gui_main.c"
-        "gui_alarma.c"
-        "gui_config.c"
-        "gui_pasos.c"
-        "gui_wifi.c"
-
-    INCLUDE_DIRS "."
+    INCLUDE_DIRS
+        "."
+        "hardware"
+        "gui"
 )
 
 # Opciones de compilación para los demos de LVGL (mantenidas de tu archivo original)

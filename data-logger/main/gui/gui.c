@@ -1,10 +1,11 @@
 #include "gui.h"
 #include "gui_hw.h"
 #include "gui_screens.h"
+#include "gui_hostname.h"
 #include <stdio.h>
 #include "app_core.h" // Asegurate de que esté este include arriba de todo
 #include "esp_log.h"
-#include "hw_rtc.h"
+#include "../hardware/hw_rtc.h"
 
 // Declaración REAL de los punteros (el espacio en memoria existe acá)
 lv_obj_t * scr_main = NULL;
@@ -42,8 +43,15 @@ static void reloj_timer_cb(lv_timer_t * timer) {
 
     // Si el RTC ya tiene una hora válida (ya se sincronizó por NTP)
     if (hw_rtc_get_time(&timeinfo)) {
-        char buf[6];
-        snprintf(buf, sizeof(buf), "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+        char buf[32]; // Agrandamos el buffer para que entre la fecha y la hora
+
+        // Formateamos: DD/MM/YYYY HH:MM
+        snprintf(buf, sizeof(buf), "%02d/%02d/%04d %02d:%02d",
+                 timeinfo.tm_mday,
+                 timeinfo.tm_mon + 1,        // Los meses arrancan en 0
+                 timeinfo.tm_year + 1900,    // Años desde 1900
+                 timeinfo.tm_hour,
+                 timeinfo.tm_min);
 
         // Actualizamos directamente. ¡Sin gui_lock() porque LVGL ya nos está protegiendo!
         if (lbl_time_main) lv_label_set_text(lbl_time_main, buf);
@@ -90,6 +98,7 @@ void gui_crear_pantallas(void) {
     gui_crear_pantalla_main();
     gui_crear_pantalla_alarma();
     gui_crear_pantalla_config();
+    gui_crear_pantalla_hostname();
     gui_crear_pantalla_pasos();
     gui_crear_pantalla_wifi();
     lv_timer_create(inactividad_timer_cb, 500, NULL);

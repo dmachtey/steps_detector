@@ -2,6 +2,8 @@
 .cache
 .vscode
 build
+build/
 managed_components
-.cache
-data-logger/.cache/*
+data-logger/.cache/
+.cache/
+.cache/clangd/
