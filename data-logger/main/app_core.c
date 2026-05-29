@@ -3,7 +3,7 @@
 #include "hardware/hw_mic.h"
 #include "hardware/hw_rtc.h"
 #include "gui/gui.h"
-#include "logger.h" 
+#include "logger.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -18,10 +18,12 @@
 #include "esp_netif.h"
 #include "esp_event.h"
 // --------------------------------
+#include "esp_system.h"
+
 
 static const char *TAG = "APP_CORE";
 static volatile estado_logger_t estado_actual = ESTADO_REPOSO;
-static volatile bool ui_telemetria_activa = false; 
+static volatile bool ui_telemetria_activa = false;
 
 typedef struct { int16_t x; int16_t y; int16_t z; } imu_data_t;
 
@@ -103,7 +105,7 @@ void app_core_init(void) {
     estado_actual = ESTADO_REPOSO;
     ui_telemetria_activa = false;
 
-    logger_init(); 
+    logger_init();
 
     imu_queue = xQueueCreate(20, sizeof(imu_data_t));
     mic_queue = xQueueCreate(20, sizeof(int16_t));
@@ -113,6 +115,7 @@ void app_core_init(void) {
     xTaskCreatePinnedToCore(imu_sampler_task, "IMU_TASK", 4096, NULL, 20, NULL, 1);
     xTaskCreatePinnedToCore(mic_sampler_task, "MIC_TASK", 4096, NULL, 21, NULL, 1);
     xTaskCreatePinnedToCore(telemetria_ui_task, "UI_TASK", 4096, NULL, 5, NULL, 0);
+    ESP_LOGW(TAG, ">>> RAM Libre actual: %ld bytes <<<", (long)esp_get_free_heap_size());
 }
 
 // --- CONTROLES DE LA UI ---
