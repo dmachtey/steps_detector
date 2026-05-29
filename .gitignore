@@ -1,1 +1,7 @@
 *.pdf
+.cache
+.vscode
+build
+managed_components
+.cache
+data-logger/.cache/*

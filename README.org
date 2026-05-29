@@ -4,7 +4,7 @@
 #
 # Created: Wed May 20 06:50:51 2026 (-0300)
 #
-# Last-Updated: Thu May 21 08:38:37 2026 (-0300)
+# Last-Updated: Wed May 27 05:29:36 2026 (-0300)
 #+LATEX_CLASS: article
 #+LATEX_CLASS_OPTIONS: [a4paper, 11pt, oneside]
 #+TITLE: Detección de Intrusión mediante Análisis Vibracional en Estructuras Flotantes
@@ -112,15 +112,26 @@ https://docs.waveshare.com/ESP32-S3-Touch-AMOLED-1.8
 #+ATTR_LaTeX: :width 0.6\textwidth\textwidth :options angle=0 :placement [H]
 [[file:media/ESP32-S3-Touch-AMOLED-1.8-size.jpg]]
 
+** Programming examples:
+https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.8/tree/main
+
 * Data Collector
  - Permite recolectar datos de campo, para el entrenamiento de modelo
-   de ML, directamente con el teléfono.
+   de ML, directamente con el teléfono. audio ($8000\text{ Hz}$) y
+   acelerometro a ($~60\text{ Hz}$), que luego será subsampleado a
+   ($50\text{ Hz}$)
  - logger:
    https://dmachtey.github.io/steps_detector/logger/phone-recorder.html
+
+
 
 ** Raw Data
 - ./raw-data/
 
+* Data Logger (device)
+
+** Dependencies
+- idf.py add-dependency "lvgl/lvgl^8.3.11"
 * Estructura del Clasificador y Clases de Detección
 
 Para garantizar un funcionamiento robusto en el entorno real de la
@@ -228,7 +239,3 @@ profunda. La solución es una Arquitectura Híbrida:
   aceleración, e inmediatamente borrará la onda cruda de la memoria
   RAM. Los datos transformados se pasarán al modelo híbrido TensorFlow
   Lite para emitir la predicción.
-
-
-
-

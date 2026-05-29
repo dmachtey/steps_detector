@@ -23,7 +23,7 @@ function graficador(basename)
 
     % Limpieza de encabezados si existen
     if accel_data(1, 1) < 1000000
-        accel_data(1, :) = []; 
+        accel_data(1, :) = [];
     end
 
     % Extraer columnas
@@ -37,24 +37,20 @@ function graficador(basename)
     if max(abs(y)) ~= 0, y = y ./ max(abs(y)); end
     if max(abs(z)) ~= 0, z = z ./ max(abs(z)); end
 
-    % SEPARACIÓN EN ALTURA (Offset)
-    y = y + 1;
-    z = z + 2;
+    % [MODIFICACIÓN] Se eliminan los offsets (y = y + 1; z = z + 2;)
+    % porque ahora cada eje se grafica en su propio subeje independiente.
 
     % Normalizar el tiempo del acelerómetro para que empiece en 0 segundos
     t_accel = (t_ms - t_ms(1)) / 1000;
-    
+
     % -------------------------------------------------------------------------
-    % 4. DETECCIÓN Y RECORTE DE DATOS ÚTILES (NUEVO)
+    % 4. DETECCIÓN Y RECORTE DE DATOS ÚTILES
     % -------------------------------------------------------------------------
-    % Calculamos la longitud real de cada registro
     t_max_audio = max(t_audio);
     t_max_accel = max(t_accel);
-    
-    % La "parte buena" es el tiempo mínimo donde ambas señales existen
+
     t_util = min(t_max_audio, t_max_accel);
-    
-    % Si hay una diferencia mayor a 0.1 segundos, informamos al usuario
+
     if abs(t_max_audio - t_max_accel) > 0.1
         fprintf('\n--- AVISO DE SINCRONIZACIÓN ---\n');
         fprintf('Se detectó un corte asimétrico en la recolección de datos.\n');
@@ -74,36 +70,52 @@ function graficador(basename)
     z = z(idx_accel);
 
     % -------------------------------------------------------------------------
-    % 5. Graficación Sincronizada
+    % 5. Graficación Sincronizada (4 subplots independientes)
     % -------------------------------------------------------------------------
     disp('Generando gráficas...');
-    figure('Name', ['Análisis de Pasos - Muestra: ', basename], 'Position', [100, 100, 800, 600]);
+    % Obtener el tamaño de la pantalla actual [X_inicio, Y_inicio, Ancho, Alto]
+    screen_size = get(0, 'ScreenSize');
+
+    % Crear la figura ocupando el 100% del ancho y alto detectados
+    figure('Name', ['Análisis de Pasos - Muestra: ', basename], 'Position', screen_size);
+
+    % figure('Name', ['Análisis de Pasos - Muestra: ', basename], 'Position', [100, 50, 900, 800]);
 
     % --- Subplot 1: Señal de Audio ---
-    subplot(2, 1, 1);
-    plot(t_audio, audio_data, 'k'); 
+    subplot(4, 1, 1);
+    plot(t_audio, audio_data, 'k');
     title('Señal Acústica (Micrófono) - Golpes de pasos / Ambiente');
-    xlabel('Tiempo (Segundos)');
     ylabel('Amplitud');
     grid on;
-    xlim([0 t_util]); % Usamos t_util en lugar del antiguo t_max
+    xlim([0 t_util]);
 
-    % --- Subplot 2: Acelerómetro Normalizado y Separado ---
-    subplot(2, 1, 2);
-    plot(t_accel, x, 'r', 'LineWidth', 1.2); hold on;
-    plot(t_accel, y, 'b', 'LineWidth', 1.2);
-    plot(t_accel, z, 'g', 'LineWidth', 1.2); hold off;
-    
-    title('Movimiento Estructural (Acelerómetro)');
-    xlabel('Tiempo (Segundos)');
-    
-    yticks([0 1 2]);
-    yticklabels({'Eje X', 'Eje Y', 'Eje Z'});
+    % --- Subplot 2: Eje X del Acelerómetro ---
+    subplot(4, 1, 2);
+    plot(t_accel, x, 'r', 'LineWidth', 1.2);
+    title('Movimiento Estructural - Eje X');
+    ylabel('Aceleración (Norm)');
     grid on;
-    xlim([0 t_util]); 
+    xlim([0 t_util]);
 
-    % Vincular los ejes X de ambas gráficas
-    linkaxes(findall(gcf,'type','axes'), 'x');
+    % --- Subplot 3: Eje Y del Acelerómetro ---
+    subplot(4, 1, 3);
+    plot(t_accel, y, 'b', 'LineWidth', 1.2);
+    title('Movimiento Estructural - Eje Y');
+    ylabel('Aceleración (Norm)');
+    grid on;
+    xlim([0 t_util]);
 
-    disp('¡Gráficas generadas con éxito!');
+    % --- Subplot 4: Eje Z del Acelerómetro ---
+    subplot(4, 1, 4);
+    plot(t_accel, z, 'g', 'LineWidth', 1.2);
+    title('Movimiento Estructural - Eje Z');
+    xlabel('Tiempo (Segundos)');
+    ylabel('Aceleración (Norm)');
+    grid on;
+    xlim([0 t_util]);
+
+    % Vincular los ejes X de las 4 gráficas de manera simultánea
+    linkaxes(findall(gcf, 'type', 'axes'), 'x');
+
+    disp('¡Gráficas individuales generadas con éxito!');
 end
