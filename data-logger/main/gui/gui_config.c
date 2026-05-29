@@ -4,7 +4,10 @@
 
 // Callbacks específicos de navegación interna
 static void btn_ir_pasos_cb(lv_event_t * e) {
-    if(lv_event_get_code(e) == LV_EVENT_CLICKED) lv_scr_load(scr_pasos);
+    if(lv_event_get_code(e) == LV_EVENT_CLICKED) {
+        app_core_set_telemetria_activa(true); // <--- ENCENDEMOS CONSUMO
+        lv_scr_load(scr_pasos);
+    }
 }
 
 static void btn_ir_wifi_cb(lv_event_t * e) {

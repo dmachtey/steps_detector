@@ -17,6 +17,15 @@ static lv_obj_t * dd_demora;
 static lv_obj_t * btn_accion;
 static lv_obj_t * lbl_accion;
 
+
+static void btn_volver_pasos_cb(lv_event_t * e) {
+    if(lv_event_get_code(e) == LV_EVENT_CLICKED) {
+        app_core_set_telemetria_activa(false); // <--- APAGAMOS CONSUMO
+        extern lv_obj_t * scr_config;
+        lv_scr_load(scr_config);
+    }
+}
+
 // ==========================================
 // API DE ACTUALIZACIÓN DE GRÁFICOS
 // ==========================================
@@ -45,31 +54,25 @@ void gui_update_chart_mic(int16_t mic_val) {
 // ==========================================
 static void btn_accion_cb(lv_event_t * e) {
     if(lv_event_get_code(e) == LV_EVENT_CLICKED) {
-        
         if (app_core_get_estado() == ESTADO_REPOSO) {
-            // 1. Extraemos los parámetros de los combos
             char actividad[32];
             char demora_str[10];
             lv_dropdown_get_selected_str(dd_actividad, actividad, sizeof(actividad));
             lv_dropdown_get_selected_str(dd_demora, demora_str, sizeof(demora_str));
-            int demora_segundos = atoi(demora_str); // "5s" se convierte mágicamente en 5
+            int demora_segundos = atoi(demora_str);
 
-            // 2. Cambiamos la estética del botón a rojo
             lv_label_set_text(lbl_accion, "Detener");
             lv_obj_set_style_bg_color(btn_accion, lv_palette_main(LV_PALETTE_RED), 0);
-            
-            // PREPARADO PARA LA LÓGICA: Acá en el próximo paso llamaremos a:
-            // app_core_iniciar_grabacion_parametros(actividad, demora_segundos);
-            app_core_set_estado(ESTADO_GRABANDO); // Simulamos el cambio por ahora
+
+            // Disparamos la lógica real del logger
+            app_core_iniciar_grabacion_parametros(actividad, demora_segundos);
 
         } else {
-            // 1. Volvemos la estética del botón a azul
             lv_label_set_text(lbl_accion, "Iniciar");
             lv_obj_set_style_bg_color(btn_accion, lv_palette_main(LV_PALETTE_BLUE), 0);
-            
-            // PREPARADO PARA LA LÓGICA: Acá en el próximo paso llamaremos a:
-            // app_core_detener_grabacion_y_recortar();
-            app_core_set_estado(ESTADO_REPOSO);
+
+            // Detenemos y aplicamos el recorte de los 3 segundos
+            app_core_detener_grabacion_y_recortar();
         }
     }
 }
@@ -83,7 +86,7 @@ void gui_crear_pantalla_pasos(void) {
     lbl_time_pasos = crear_reloj_superior(scr_pasos);
 
     // --- 1. CONTROLES SUPERIORES ---
-    
+
     // Combo Actividad (Alineado a la izquierda)
     dd_actividad = lv_dropdown_create(scr_pasos);
     lv_dropdown_set_options(dd_actividad, "caminando\nsin_caminando");
@@ -102,7 +105,7 @@ void gui_crear_pantalla_pasos(void) {
     lv_obj_align(btn_accion, LV_ALIGN_TOP_LEFT, 250, 50);
     lv_obj_set_style_bg_color(btn_accion, lv_palette_main(LV_PALETTE_BLUE), 0);
     lv_obj_add_event_cb(btn_accion, btn_accion_cb, LV_EVENT_ALL, NULL);
-    
+
     lbl_accion = lv_label_create(btn_accion);
     lv_label_set_text(lbl_accion, "Iniciar");
     lv_obj_center(lbl_accion);
@@ -129,8 +132,8 @@ void gui_crear_pantalla_pasos(void) {
     lv_obj_set_size(btn_volverp, 140, 50);
     lv_obj_align(btn_volverp, LV_ALIGN_BOTTOM_RIGHT, -20, -20);
     lv_obj_set_style_bg_color(btn_volverp, lv_palette_main(LV_PALETTE_GREY), 0);
-    lv_obj_add_event_cb(btn_volverp, btn_volver_cb, LV_EVENT_CLICKED, NULL);
-    
+    lv_obj_add_event_cb(btn_volverp, btn_volver_pasos_cb, LV_EVENT_CLICKED, NULL);
+
     lv_obj_t * lbl_volverp = lv_label_create(btn_volverp);
     lv_label_set_text(lbl_volverp, "Volver");
     lv_obj_center(lbl_volverp);

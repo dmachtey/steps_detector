@@ -2,6 +2,7 @@ idf_component_register(
     SRCS
         "main.c"
         "app_core.c"
+        "logger.c"              # <--- ¡AGREGAR ESTA LÍNEA!
         "hardware/hardware.c"
         "hardware/hw_display.c"
         "hardware/hw_imu.c"
@@ -23,7 +24,7 @@ idf_component_register(
         "gui"
 )
 
-# Opciones de compilación para los demos de LVGL (mantenidas de tu archivo original)
+# Opciones de compilación para los demos de LVGL
 set_source_files_properties(
     ${LV_DEMOS_SOURCES}
     PROPERTIES COMPILE_OPTIONS

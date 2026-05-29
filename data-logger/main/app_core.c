@@ -1,35 +1,32 @@
 #include "app_core.h"
-
-// --- NUEVOS INCLUDES DEL HARDWARE DIVIDIDO ---
 #include "hardware/hw_imu.h"
 #include "hardware/hw_mic.h"
+#include "hardware/hw_rtc.h"
 #include "gui/gui.h"
+#include "logger.h" 
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
-#include <stdlib.h> // Para abs()
 
-// (Tus includes de WiFi y NVS que agregamos antes)
+// --- ESTAS LIBRERÍAS FALTABAN ---
+#include <stdlib.h>
+#include <string.h>
 #include "nvs_flash.h"
 #include "nvs.h"
 #include "esp_wifi.h"
-#include "esp_event.h"
-#include <string.h>
 #include "esp_netif.h"
-
-#include "hardware/hw_rtc.h"
+#include "esp_event.h"
+// --------------------------------
 
 static const char *TAG = "APP_CORE";
 static volatile estado_logger_t estado_actual = ESTADO_REPOSO;
+static volatile bool ui_telemetria_activa = false; 
 
-// --- ESTRUCTURAS Y COLAS ---
-typedef struct {
-    int16_t x; int16_t y; int16_t z;
-} imu_data_t;
+typedef struct { int16_t x; int16_t y; int16_t z; } imu_data_t;
 
 static QueueHandle_t imu_queue = NULL;
-static QueueHandle_t mic_queue = NULL; // Cola para la UI del micrófono
+static QueueHandle_t mic_queue = NULL;
 
 // =========================================================
 // 1. TAREA IMU (50 Hz)
@@ -39,10 +36,14 @@ static void imu_sampler_task(void *arg) {
     TickType_t xLastWakeTime = xTaskGetTickCount();
     const TickType_t xFrequency = pdMS_TO_TICKS(20);
 
-    ESP_LOGI(TAG, "Tarea IMU iniciada (50 Hz)");
     while(1) {
         if (hw_imu_read(&data.x, &data.y, &data.z)) {
-            xQueueSendToBack(imu_queue, &data, 0);
+            if (ui_telemetria_activa) {
+                xQueueSendToBack(imu_queue, &data, 0);
+            }
+            if (estado_actual == ESTADO_GRABANDO) {
+                logger_feed_imu(data.x, data.y, data.z);
+            }
         }
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
     }
@@ -55,78 +56,100 @@ static void imu_sampler_task(void *arg) {
 
 static void mic_sampler_task(void *arg) {
     int16_t audio_buffer[MIC_BUFFER_SAMPLES];
-    //    int loop_count = 0; // Contador para no saturar la terminal
-
-    ESP_LOGI(TAG, "Tarea MIC iniciada (Bloques DMA de 8 KHz)");
 
     while(1) {
         if (hw_mic_read_dma(audio_buffer, MIC_BUFFER_SAMPLES)) {
-
-            // Buscar el pico máximo (Envolvente de la onda)
-            int16_t max_peak = 0;
-            for (int i = 0; i < MIC_BUFFER_SAMPLES; i++) {
-                int16_t val = abs(audio_buffer[i]);
-                if (val > max_peak) {
-                    max_peak = val;
+            if (ui_telemetria_activa) {
+                int16_t max_peak = 0;
+                for (int i = 0; i < MIC_BUFFER_SAMPLES; i++) {
+                    int16_t val = abs(audio_buffer[i]);
+                    if (val > max_peak) max_peak = val;
                 }
+                xQueueSendToBack(mic_queue, &max_peak, 0);
             }
 
-            // Sonda: Imprimir el nivel del mic una vez por segundo (20 * 50ms)
-            // if (loop_count++ % 20 == 0) {
-            //     ESP_LOGI(TAG, "Nivel RMS/Pico MIC: %d", max_peak);
-            // }
-
-            xQueueSendToBack(mic_queue, &max_peak, 0);
+            if (estado_actual == ESTADO_GRABANDO) {
+                logger_feed_mic(audio_buffer, MIC_BUFFER_SAMPLES);
+            }
         }
     }
 }
 
 // =========================================================
-// 3. TAREA CONSUMIDORA: Refresco de Interfaz (GUI)
+// 3. TAREA GUI Y API DEL CORE
 // =========================================================
 static void telemetria_ui_task(void *arg) {
     imu_data_t rx_imu;
     int16_t rx_mic;
 
-    ESP_LOGI(TAG, "Tarea Telemetría GUI iniciada");
     while(1) {
-        // Usamos WHILE para vaciar absolutamente todo lo que haya en la cola
-        while (xQueueReceive(imu_queue, &rx_imu, 0) == pdTRUE) {
-            gui_update_chart_accel(rx_imu.x, rx_imu.y, rx_imu.z);
+        if (ui_telemetria_activa) {
+            while (xQueueReceive(imu_queue, &rx_imu, 0) == pdTRUE) {
+                gui_update_chart_accel(rx_imu.x, rx_imu.y, rx_imu.z);
+            }
+            while (xQueueReceive(mic_queue, &rx_mic, 0) == pdTRUE) {
+                gui_update_chart_mic(rx_mic);
+            }
+        } else {
+            xQueueReset(imu_queue);
+            xQueueReset(mic_queue);
         }
-
-        while (xQueueReceive(mic_queue, &rx_mic, 0) == pdTRUE) {
-            gui_update_chart_mic(rx_mic);
-        }
-
-        // Dormimos 50ms para mantener el refresco visual a 20 FPS
         vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 
-
-// =========================================================
-// API DEL CORE
-// =========================================================
 void app_core_init(void) {
-    ESP_LOGI(TAG, "Inicializando Core y colas...");
+    ESP_LOGI(TAG, "Inicializando Core...");
     estado_actual = ESTADO_REPOSO;
+    ui_telemetria_activa = false;
+
+    logger_init(); 
 
     imu_queue = xQueueCreate(20, sizeof(imu_data_t));
     mic_queue = xQueueCreate(20, sizeof(int16_t));
 
     app_core_wifi_init();
-    // Tareas de muestreo ancladas al Core 1
+
     xTaskCreatePinnedToCore(imu_sampler_task, "IMU_TASK", 4096, NULL, 20, NULL, 1);
     xTaskCreatePinnedToCore(mic_sampler_task, "MIC_TASK", 4096, NULL, 21, NULL, 1);
-
-    // Tarea GUI anclada al Core 0
     xTaskCreatePinnedToCore(telemetria_ui_task, "UI_TASK", 4096, NULL, 5, NULL, 0);
+}
+
+// --- CONTROLES DE LA UI ---
+void app_core_set_telemetria_activa(bool activa) {
+    ui_telemetria_activa = activa;
+}
+
+void app_core_set_estado(estado_logger_t nuevo_estado) {
+    estado_actual = nuevo_estado;
+}
+
+estado_logger_t app_core_get_estado(void) {
+    return estado_actual;
+}
+
+void app_core_iniciar_grabacion_parametros(const char* actividad, int demora_segundos) {
+    app_core_set_estado(ESTADO_GRABANDO);
+    logger_start(actividad, demora_segundos);
+}
+
+void app_core_detener_grabacion_y_recortar(void) {
+    logger_stop();
+    app_core_set_estado(ESTADO_REPOSO);
+}
+
+void app_core_iniciar_grabacion(void) {
+    app_core_set_estado(ESTADO_GRABANDO);
+}
+
+void app_core_detener_grabacion(void) {
+    app_core_set_estado(ESTADO_REPOSO);
 }
 
 // =========================================================
 // 4. LÓGICA DE WIFI Y MEMORIA NVS
 // =========================================================
+
 static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
@@ -135,9 +158,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t e
         esp_wifi_connect();
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        ESP_LOGI(TAG, "¡WiFi Conectado! IP Asignada: " IPSTR,
-                 IP2STR(&event->ip_info.ip));
-        // Aquí el reloj NTP
+        ESP_LOGI(TAG, "¡WiFi Conectado! IP Asignada: " IPSTR, IP2STR(&event->ip_info.ip));
         hw_rtc_sync_ntp();
     }
 }
@@ -165,7 +186,6 @@ void app_core_wifi_init(void) {
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, &instance_any_id));
     ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL, &instance_got_ip));
 
-    // Leer la memoria NVS al arrancar
     nvs_handle_t my_handle;
     char ssid[32] = {0};
     char pass[64] = {0};
@@ -190,9 +210,6 @@ void app_core_wifi_init(void) {
         ESP_LOGI(TAG, "No hay credenciales WiFi en NVS. Modo espera.");
     }
 
-
-
-    // Inyectar el hostname guardado <---
     char dev_name[MAX_DEV_NAME_LEN];
     app_core_get_device_name(dev_name, sizeof(dev_name));
     esp_netif_set_hostname(sta_netif, dev_name);
@@ -211,7 +228,6 @@ void app_core_set_device_name(const char* name) {
 
         ESP_LOGI(TAG, "Nombre de equipo guardado en NVS: %s", name);
 
-        // Actualizamos el hostname de red en caliente (por si ya estamos conectados)
         esp_netif_t *netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
         if (netif) {
             esp_netif_set_hostname(netif, name);
@@ -221,7 +237,6 @@ void app_core_set_device_name(const char* name) {
 
 void app_core_get_device_name(char* out_name, size_t max_len) {
     nvs_handle_t my_handle;
-    // Nombre por defecto por si es la primera vez que arranca la placa
     strncpy(out_name, "Datalogger_ESP", max_len);
 
     if (nvs_open("storage", NVS_READONLY, &my_handle) == ESP_OK) {
@@ -232,8 +247,3 @@ void app_core_get_device_name(char* out_name, size_t max_len) {
         nvs_close(my_handle);
     }
 }
-
-void app_core_set_estado(estado_logger_t nuevo_estado) { estado_actual = nuevo_estado; }
-estado_logger_t app_core_get_estado(void) { return estado_actual; }
-void app_core_iniciar_grabacion(void) { app_core_set_estado(ESTADO_GRABANDO); }
-void app_core_detener_grabacion(void) { app_core_set_estado(ESTADO_REPOSO); }
