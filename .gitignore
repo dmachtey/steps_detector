@@ -7,3 +7,7 @@ managed_components
 data-logger/.cache/
 .cache/
 .cache/clangd/
+env_steps
+env_steps/
+env_steps
+env_steps/
