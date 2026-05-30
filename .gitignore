@@ -11,3 +11,5 @@ env_steps
 env_steps/
 env_steps
 env_steps/
+/proyecto_ml/__pycache__/
+/proyecto_ml/Classifier.h
