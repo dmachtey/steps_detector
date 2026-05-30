@@ -2,6 +2,7 @@ import os
 import glob
 import pandas as pd
 import numpy as np
+from scipy.io import wavfile
 
 def get_label_from_filename(filename):
     basename = os.path.basename(filename).lower()
@@ -11,47 +12,69 @@ def get_label_from_filename(filename):
         return 'steps'
     return 'unknown'
 
-def segmentar_acelerometro(raw_folder, window_sec=3.0, overlap_sec=1.5, fs=50):
+def segmentar_multimodal(raw_folder, window_sec=3.0, overlap_sec=0.5, fs_accel=50, fs_audio=8000):
     """
-    Lee todos los CSVs, extrae [X, Y, Z] y los pica en ventanas de tamaño fijo.
+    Lee pares de archivos (CSV y WAV) y los segmenta sincrónicamente.
     """
-    window_samples = int(window_sec * fs)          # Ej: 3.0s * 50Hz = 150 muestras
-    step_samples = int((window_sec - overlap_sec) * fs) # Cuánto avanza la ventana
-    
-    X_data = []
+    # Cálculos para el acelerómetro
+    window_accel = int(window_sec * fs_accel)          # 150
+    step_accel = int((window_sec - overlap_sec) * fs_accel) # 125
+
+    # Cálculos para el audio
+    window_audio = int(window_sec * fs_audio)          # 24000
+    step_audio = int((window_sec - overlap_sec) * fs_audio) # 20000
+
+    X_accel_list = []
+    X_audio_list = []
     y_labels = []
-    
-    # Buscar todos los CSVs del acelerómetro
-    csv_pattern = os.path.join(raw_folder, '*_acelerometro.csv')
-    csv_files = glob.glob(csv_pattern)
-    
-    for file in csv_files:
-        label = get_label_from_filename(file)
+
+    # Buscar todos los CSVs
+    csv_files = glob.glob(os.path.join(raw_folder, '*_acelerometro.csv'))
+
+    for csv_file in csv_files:
+        # Deducir el nombre del archivo de audio correspondiente
+        base_name = csv_file.replace('_acelerometro.csv', '')
+        wav_file = base_name + '_audio.wav'
+
+        label = get_label_from_filename(csv_file)
         if label == 'unknown':
-            print(f"Ignorando archivo sin etiqueta clara: {os.path.basename(file)}")
             continue
-            
+
+        if not os.path.exists(wav_file):
+            print(f"Aviso: Falta el archivo de audio para {os.path.basename(csv_file)}. Se ignora el par.")
+            continue
+
         try:
-            # Leer el CSV. pandas detecta automáticamente la cabecera.
-            df = pd.read_csv(file)
-            
-            # Extraemos solo las columnas de aceleración (asumiendo que son X, Y, Z)
-            # Ignoramos la columna 0 (timestamp_ms)
-            data = df[['accel_x', 'accel_y', 'accel_z']].values 
-            
+            # 1. Leer Acelerómetro
+            df = pd.read_csv(csv_file)
+            data_accel = df[['accel_x', 'accel_y', 'accel_z']].values
+
+            # 2. Leer Audio
+            fs_wav, data_audio = wavfile.read(wav_file)
+
+            # Si el audio quedó guardado como estéreo (por el driver crudo), lo forzamos a mono
+            if len(data_audio.shape) > 1:
+                data_audio = data_audio[:, 0]
+
         except Exception as e:
-            print(f"Error procesando {os.path.basename(file)}: {e}")
+            print(f"Error procesando el par {os.path.basename(base_name)}: {e}")
             continue
-            
-        # Picar los datos en ventanas
-        n_samples = len(data)
-        for start in range(0, n_samples - window_samples + 1, step_samples):
-            window = data[start : start + window_samples]
-            
-            # Opcional pero recomendado: Normalizar la ventana si los valores varían mucho
-            # window = window / np.max(np.abs(window), axis=0) # (Lo dejamos comentado por ahora)
-            
-            X_data.append(window)
+
+        # Determinar cuántas ventanas podemos sacar (limitado por el archivo que haya quedado más corto)
+        n_windows_accel = (len(data_accel) - window_accel) // step_accel + 1
+        n_windows_audio = (len(data_audio) - window_audio) // step_audio + 1
+        n_windows = min(n_windows_accel, n_windows_audio)
+
+        # Extraer las ventanas sincrónicamente
+        for i in range(n_windows):
+            start_a = i * step_accel
+            start_m = i * step_audio
+
+            win_accel = data_accel[start_a : start_a + window_accel]
+            win_audio = data_audio[start_m : start_m + window_audio]
+
+            X_accel_list.append(win_accel)
+            X_audio_list.append(win_audio)
             y_labels.append(label)
-            
-    return np.array(X_data), np.array(y_labels)
+
+    return np.array(X_accel_list), np.array(X_audio_list), np.array(y_labels)
