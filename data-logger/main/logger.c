@@ -5,10 +5,11 @@
 #include "freertos/task.h"
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h> // Para ftruncate()
+#include <unistd.h>
 #include <sys/time.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <stdint.h>
 
 static const char *TAG = "LOGGER";
 
@@ -82,12 +83,11 @@ static void write_wav_header(FILE *f, uint32_t data_size) {
     fwrite(&header, 1, sizeof(wav_header_t), f);
 }
 
-static uint64_t get_time_us() {
+static uint64_t get_time_us(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (uint64_t)tv.tv_sec * 1000000ULL + tv.tv_usec;
 }
-
 
 static void logger_imprimir_dir(void) {
     DIR *dir = opendir("/sdcard");
@@ -99,18 +99,13 @@ static void logger_imprimir_dir(void) {
     ESP_LOGI(TAG, "=== CONTENIDO DE /sdcard ===");
     struct dirent *ent;
     struct stat st;
-    char full_path[300]; // Buffer para armar la ruta completa
+    char full_path[300];
 
     while ((ent = readdir(dir)) != NULL) {
-        // Armamos la ruta absoluta del archivo
         snprintf(full_path, sizeof(full_path), "/sdcard/%s", ent->d_name);
-
-        // Consultamos los metadatos del archivo
         if (stat(full_path, &st) == 0) {
-            // Imprimimos el nombre alineado a la izquierda (35 caracteres) y el tamaño en bytes
             ESP_LOGI(TAG, " -> %-35s | %8ld bytes", ent->d_name, (long)st.st_size);
         } else {
-            // Fallback por si stat falla (raro, pero seguro)
             ESP_LOGI(TAG, " -> %s", ent->d_name);
         }
     }
@@ -122,8 +117,6 @@ static void logger_imprimir_dir(void) {
 void logger_init(void) {
     log_state = LOG_IDLE;
     ESP_LOGI(TAG, "Módulo Logger inicializado.");
-
-    // Sonda temporal al arrancar la placa
     logger_imprimir_dir();
 }
 
@@ -135,10 +128,9 @@ void logger_start(const char* actividad, int demora_segundos) {
     if (log_state != LOG_IDLE) return;
 
     struct tm timeinfo;
-    hw_rtc_get_time(&timeinfo); // Necesitamos la hora actual para el nombre
+    hw_rtc_get_time(&timeinfo);
 
     char base_filename[128];
-    // Formato: /sdcard/actividad_YYYYMMDD_HHMMSS
     snprintf(base_filename, sizeof(base_filename), "/sdcard/%s_%04d%02d%02d_%02d%02d%02d",
              actividad,
              timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
@@ -158,15 +150,11 @@ void logger_start(const char* actividad, int demora_segundos) {
         return;
     }
 
-    // Preparar variables de recorte
     csv_offset_idx = 0;
     csv_total_samples = 0;
     wav_data_bytes = 0;
 
-    // Escribir cabecera vacía del WAV
     write_wav_header(f_wav, 0);
-
-    // Escribir cabecera del CSV
     fprintf(f_csv, "timestamp_ms,accel_x,accel_y,accel_z\n");
 
     current_delay_sec = demora_segundos;
@@ -181,55 +169,78 @@ void logger_start(const char* actividad, int demora_segundos) {
     }
 }
 
+// === VERSIÓN PARCHADA DE LOGGER_STOP CON SEMÁFORO DE TIEMPO ===
 void logger_stop(void) {
-    if (log_state == LOG_IDLE) return;
+    if (log_state != LOG_RECORDING) {
+        log_state = LOG_IDLE;
+        return;
+    }
+
+    // 1. CORTAR EL FLUJO DE DATOS INMEDIATAMENTE
     log_state = LOG_IDLE;
 
-    if (!f_csv || !f_wav) return;
+    // 2. Dar tiempo (50ms) para que las tareas del IMU y Micrófono terminen
+    vTaskDelay(pdMS_TO_TICKS(50));
 
-    ESP_LOGI(TAG, "Deteniendo grabación y aplicando recorte de %ds...", SECONDS_TO_CROP);
+    ESP_LOGI(TAG, "Deteniendo grabación y aplicando recorte de %d segundos...", SECONDS_TO_CROP);
 
-    // --- RECORTAR CSV ---
-    if (csv_total_samples > CSV_CROP_SAMPLES) {
-        off_t truncate_pos = csv_offsets[csv_offset_idx]; // El offset más antiguo del buffer circular
-        ftruncate(fileno(f_csv), truncate_pos);
+    // --- 1. RECORTAR CSV ---
+    if (f_csv) {
+        if (csv_total_samples > CSV_CROP_SAMPLES) {
+            off_t truncate_pos = csv_offsets[csv_offset_idx];
+
+            // Forzar guardado en SD antes del recorte
+            fflush(f_csv);
+            ftruncate(fileno(f_csv), truncate_pos);
+        }
+        fclose(f_csv);
+        f_csv = NULL;
     }
 
-    // --- RECORTAR WAV ---
-    uint32_t bytes_to_crop = SAMPLE_RATE_MIC * 2 * SECONDS_TO_CROP;
-    if (wav_data_bytes > bytes_to_crop) {
-        wav_data_bytes -= bytes_to_crop;
-        // 1. Actualizar la cabecera real
-        write_wav_header(f_wav, wav_data_bytes);
-        // 2. Recortar el archivo físico (Cabecera 44 bytes + Datos)
+    // --- 2. RECORTAR Y REPARAR WAV ---
+    if (f_wav) {
+        uint32_t bytes_to_crop = SAMPLE_RATE_MIC * 2 * SECONDS_TO_CROP;
+        if (wav_data_bytes > bytes_to_crop) {
+            wav_data_bytes -= bytes_to_crop;
+        } else {
+            wav_data_bytes = 0;
+        }
+
+        // Forzar guardado del audio residual en SD
+        fflush(f_wav);
+
+        // Cortar físicamente el archivo dejando solo la cabecera (44) + el audio útil
         ftruncate(fileno(f_wav), 44 + wav_data_bytes);
+
+        // Volver al inicio del archivo para actualizar la cabecera
+        fseek(f_wav, 0, SEEK_SET);
+        write_wav_header(f_wav, wav_data_bytes);
+
+        // Volcar por última vez para asegurar la cabecera
+        fflush(f_wav);
+
+        fclose(f_wav);
+        f_wav = NULL;
     }
 
-    fclose(f_csv);
-    fclose(f_wav);
-    f_csv = NULL;
-    f_wav = NULL;
-
-    ESP_LOGI(TAG, "Archivos guardados y cerrados correctamente.");
+    ESP_LOGI(TAG, "Archivos guardados, cerrados y listos para analizar.");
 }
 
 void logger_feed_imu(int16_t x, int16_t y, int16_t z) {
     if (log_state == LOG_WAITING_DELAY) {
         if ((get_time_us() - start_time_us) / 1000000ULL >= current_delay_sec) {
             log_state = LOG_RECORDING;
-            start_time_us = get_time_us(); // Reiniciamos el tiempo para el CSV
+            start_time_us = get_time_us();
             ESP_LOGI(TAG, "¡Retardo superado, iniciando grabación real!");
         }
     }
 
     if (log_state == LOG_RECORDING && f_csv) {
-        // Guardamos en qué byte estamos por empezar a escribir esta línea
         csv_offsets[csv_offset_idx] = ftello(f_csv);
 
         uint32_t ts_ms = (uint32_t)((get_time_us() - start_time_us) / 1000);
         fprintf(f_csv, "%lu,%d,%d,%d\n", ts_ms, x, y, z);
 
-        // Avanzamos el anillo
         csv_offset_idx = (csv_offset_idx + 1) % CSV_CROP_SAMPLES;
         csv_total_samples++;
     }
@@ -237,7 +248,20 @@ void logger_feed_imu(int16_t x, int16_t y, int16_t z) {
 
 void logger_feed_mic(int16_t *buffer, size_t num_samples) {
     if (log_state == LOG_RECORDING && f_wav) {
-        size_t bytes_to_write = num_samples * sizeof(int16_t);
+
+        // num_samples trae la cantidad de lecturas (L + R).
+        // Como queremos Mono real, la cantidad final será la mitad.
+        size_t mono_samples = num_samples / 2;
+
+        // Compactamos el buffer sobre sí mismo, guardando solo el canal Izquierdo
+        for (size_t i = 0; i < mono_samples; i++) {
+            buffer[i] = buffer[i * 2];
+            // Nota: Si al probarlo escuchas silencio, cambiá el índice a: buffer[i * 2 + 1]
+            // (depende de a qué pin L/R tengas soldado el micrófono)
+        }
+
+        // Ahora escribimos en la SD la mitad de los bytes (Mono real)
+        size_t bytes_to_write = mono_samples * sizeof(int16_t);
         fwrite(buffer, 1, bytes_to_write, f_wav);
         wav_data_bytes += bytes_to_write;
     }
