@@ -11,8 +11,8 @@
 #include "../gui/gui.h"
 
 // --- CONSTANTES DE NORMALIZACIÓN (El "Punto Dulce" de Octave) ---
-#define DIV_IMU 200.0f
-#define DIV_AUDIO 7000.0f
+#define DIV_IMU 800.0f
+#define DIV_AUDIO 2000.0f
 #define CLAMP(val) ((val) > 1.0f ? 1.0f : ((val) < -1.0f ? -1.0f : (val)))
 
 static const char *TAG = "ALARM_CORE";

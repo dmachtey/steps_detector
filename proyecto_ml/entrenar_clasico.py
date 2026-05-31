@@ -38,8 +38,8 @@ def main():
     datos = np.load(DATA_PATH)
 
     # --- NORMALIZACIÓN EXPLÍCITA (ESPEJO DEL ESP32) ---
-    DIV_IMU = 200.0
-    DIV_AUDIO = 7000.0
+    DIV_IMU = 800.0
+    DIV_AUDIO = 2000.0
 
     X_accel_raw = datos['X_accel'].astype(np.float32)
     X_audio_raw = datos['X_audio'].astype(np.float32)

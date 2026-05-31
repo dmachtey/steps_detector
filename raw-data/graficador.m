@@ -25,8 +25,8 @@ function graficador(basename)
     % --- 3. DC Blocker y Normalización ---
     disp('Aplicando Filtro de Gravedad, Ganancia y Recorte (Clipping)...');
 
-    DIVISOR_IMU = 1000.0;
-    DIVISOR_AUDIO = 7000.0;
+    DIVISOR_IMU = 800.0;
+    DIVISOR_AUDIO = 2000.0;
 
     % Filtro DC Blocker para el IMU (Restamos la media para eliminar gravedad)
     x_limpio = x_raw - mean(x_raw);
