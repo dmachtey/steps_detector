@@ -11,7 +11,7 @@
 #include "../gui/gui.h"
 
 // --- CONSTANTES DE NORMALIZACIÓN (El "Punto Dulce" de Octave) ---
-#define DIV_IMU 1000.0f
+#define DIV_IMU 200.0f
 #define DIV_AUDIO 7000.0f
 #define CLAMP(val) ((val) > 1.0f ? 1.0f : ((val) < -1.0f ? -1.0f : (val)))
 
@@ -23,6 +23,7 @@ extern QueueHandle_t alarm_imu_queue;
 extern QueueHandle_t alarm_mic_queue;
 
 // Buffers para el Machine Learning
+static int16_t raw_imu_buffer[450];
 static float features[453];
 static float *audio_buffer = NULL;
 
@@ -41,16 +42,14 @@ static void alarm_task(void *pvParameters) {
     ESP_LOGI(TAG, "Cerebro IA iniciado. Esperando armado...");
 
     bool primer_llenado = true;
-    int vueltas_a_dar = 150; // Para juntar los primeros 3 segundos enteros
+    int vueltas_a_dar = 150;
     int audio_idx = 0;
     int imu_idx = 0;
 
     while (1) {
         if (!alarma_activa) {
-            // Vaciar las colas para que no queden datos viejos atascados
             if (alarm_imu_queue != NULL) xQueueReset(alarm_imu_queue);
             if (alarm_mic_queue != NULL) xQueueReset(alarm_mic_queue);
-
             vTaskDelay(pdMS_TO_TICKS(200));
             primer_llenado = true;
             continue;
@@ -61,51 +60,40 @@ static void alarm_task(void *pvParameters) {
             imu_idx = 0;
             vueltas_a_dar = 150;
         } else {
-            // --- SLIDING WINDOW (Desplazamos el tiempo) ---
+            // --- SLIDING WINDOW ---
             int offset_imu = 50 * 3;
             int offset_audio = 50 * 160;
 
-            memmove(&features[0], &features[offset_imu], (450 - offset_imu) * sizeof(float));
+            // Desplazamos el buffer crudo del IMU y el de Audio
+            memmove(&raw_imu_buffer[0], &raw_imu_buffer[offset_imu], (450 - offset_imu) * sizeof(int16_t));
             memmove(&audio_buffer[0], &audio_buffer[offset_audio], (24000 - offset_audio) * sizeof(float));
 
             imu_idx = 450 - offset_imu;
             audio_idx = 24000 - offset_audio;
-            vueltas_a_dar = 50; // Solo juntamos 1 segundo nuevo
+            vueltas_a_dar = 50;
         }
 
-        // --- BUCLE DE CONSUMO Y NORMALIZACIÓN ---
-        // --- FILTRO DC BLOCKER (Solo para el Acelerómetro) ---
-        static float dc_x = 0, dc_y = 0, dc_z = 0;
-        const float ALPHA = 0.05f; // Adaptación del 5% por muestra para absorber la gravedad
-
-        // --- BUCLE DE CONSUMO Y NORMALIZACIÓN ---
+        // --- BUCLE DE CONSUMO ---
         for (int i = 0; i < vueltas_a_dar; i++) {
 
-            // 1. Acelerómetro: Leer de Queue y Eliminar Gravedad
+            // 1. Acelerómetro: Solo guardamos la muestra CRUDA
             imu_data_t imu_rx;
             if (xQueueReceive(alarm_imu_queue, &imu_rx, pdMS_TO_TICKS(100)) == pdTRUE) {
-
-                // 1A. El filtro aprende cuánto pesa la gravedad actual
-                dc_x = (ALPHA * imu_rx.x) + ((1.0f - ALPHA) * dc_x);
-                dc_y = (ALPHA * imu_rx.y) + ((1.0f - ALPHA) * dc_y);
-                dc_z = (ALPHA * imu_rx.z) + ((1.0f - ALPHA) * dc_z);
-
-                // 1B. Restamos la gravedad y normalizamos (¡Acá nace la señal pura!)
-                features[imu_idx++] = CLAMP(((float)imu_rx.x - dc_x) / DIV_IMU);
-                features[imu_idx++] = CLAMP(((float)imu_rx.y - dc_y) / DIV_IMU);
-                features[imu_idx++] = CLAMP(((float)imu_rx.z - dc_z) / DIV_IMU);
+                raw_imu_buffer[imu_idx++] = imu_rx.x;
+                raw_imu_buffer[imu_idx++] = imu_rx.y;
+                raw_imu_buffer[imu_idx++] = imu_rx.z;
             } else {
                 if (imu_idx >= 3) {
-                    features[imu_idx] = features[imu_idx-3];
-                    features[imu_idx+1] = features[imu_idx-2];
-                    features[imu_idx+2] = features[imu_idx-1];
+                    raw_imu_buffer[imu_idx]   = raw_imu_buffer[imu_idx-3];
+                    raw_imu_buffer[imu_idx+1] = raw_imu_buffer[imu_idx-2];
+                    raw_imu_buffer[imu_idx+2] = raw_imu_buffer[imu_idx-1];
                 } else {
-                    features[imu_idx] = 0.0f; features[imu_idx+1] = 0.0f; features[imu_idx+2] = 0.0f;
+                    raw_imu_buffer[imu_idx] = 0; raw_imu_buffer[imu_idx+1] = 0; raw_imu_buffer[imu_idx+2] = 0;
                 }
                 imu_idx += 3;
             }
 
-            // 2. Audio: Leer de Queue y Normalizar
+            // 2. Audio: Normalizamos al vuelo (DIV_AUDIO = 7000.0)
             int16_t mic_chunk[160];
             if (xQueueReceive(alarm_mic_queue, mic_chunk, pdMS_TO_TICKS(100)) == pdTRUE) {
                 for(int j = 0; j < 160; j++) {
@@ -114,8 +102,29 @@ static void alarm_task(void *pvParameters) {
             }
         } // Fin del for
 
+        // ========================================================
+        // MAGIA MATEMÁTICA: Espejo 100% exacto de Python (np.mean)
+        // ========================================================
+        float mean_x = 0, mean_y = 0, mean_z = 0;
+
+        // A. Calculamos el promedio exacto de los últimos 3 segundos
+        for (int i = 0; i < 450; i += 3) {
+            mean_x += raw_imu_buffer[i];
+            mean_y += raw_imu_buffer[i+1];
+            mean_z += raw_imu_buffer[i+2];
+        }
+        mean_x /= 150.0f;
+        mean_y /= 150.0f;
+        mean_z /= 150.0f;
+
+        // B. Restamos la gravedad, dividimos (DIV_IMU = 1000.0) y saturamos
+        for (int i = 0; i < 450; i += 3) {
+            features[i]   = CLAMP(((float)raw_imu_buffer[i]   - mean_x) / DIV_IMU);
+            features[i+1] = CLAMP(((float)raw_imu_buffer[i+1] - mean_y) / DIV_IMU);
+            features[i+2] = CLAMP(((float)raw_imu_buffer[i+2] - mean_z) / DIV_IMU);
+        }
+
         // --- EXTRACCIÓN Y PREDICCIÓN ---
-        // FIX: Llamada corregida con 4 argumentos como espera el header
         dsp_audio_extraer_features(audio_buffer, &features[450], &features[451], &features[452]);
 
         ESP_LOGI(TAG, "Evaluando Ventana - Acel_X(G): %.2f | Audio RMS: %.4f", features[0], features[450]);
@@ -125,7 +134,7 @@ static void alarm_task(void *pvParameters) {
         if (prediccion == 1) {
             ESP_LOGW(TAG, "⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️");
             gui_trigger_alarma_visual();
-            primer_llenado = true;
+            primer_llenado = true; // Forzamos 3s limpios sin solapamiento
         } else {
             primer_llenado = false;
         }

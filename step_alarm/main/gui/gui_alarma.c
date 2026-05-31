@@ -5,7 +5,7 @@
 
 static lv_timer_t * timer_alarma = NULL;
 
-// 1. Callback que devuelve la pantalla a GRIS a los 30 segundos
+// 1. Callback que devuelve la pantalla a GRIS a los 15 segundos
 static void restaurar_color_cb(lv_timer_t * timer) {
     if (scr_alarma) {
         lv_obj_set_style_bg_color(scr_alarma, lv_palette_darken(LV_PALETTE_GREY, 3), 0);
@@ -48,7 +48,7 @@ void gui_trigger_alarma_visual(void) {
             if (timer_alarma != NULL) {
                 lv_timer_del(timer_alarma);
             }
-            timer_alarma = lv_timer_create(restaurar_color_cb, 30000, NULL);
+            timer_alarma = lv_timer_create(restaurar_color_cb, 15000, NULL);
         }
         gui_unlock();
     }

@@ -38,7 +38,7 @@ def main():
     datos = np.load(DATA_PATH)
 
     # --- NORMALIZACIÓN EXPLÍCITA (ESPEJO DEL ESP32) ---
-    DIV_IMU = 1000.0
+    DIV_IMU = 200.0
     DIV_AUDIO = 7000.0
 
     X_accel_raw = datos['X_accel'].astype(np.float32)
@@ -93,6 +93,12 @@ def main():
     print("\n[3] Entrenando Random Forest...")
     clf = RandomForestClassifier(n_estimators=15, max_depth=10, random_state=42)
     clf.fit(X_train, y_train)
+
+    importances = clf.feature_importances_
+    print(f"Importancia Audio RMS: {importances[450]*100:.2f}%")
+    print(f"Importancia Audio ZCR: {importances[451]*100:.2f}%")
+    print(f"Importancia Audio Freq: {importances[452]*100:.2f}%")
+    print(f"Importancia de los 450 datos del IMU sumados: {sum(importances[0:450])*100:.2f}%")
 
     # 5. Evaluación
     print("\n[4] Evaluando Resultados del Examen...")
