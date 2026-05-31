@@ -2,7 +2,7 @@ dependencies:
   esp_lcd_sh8601:
     dependencies: []
     source:
-      path: /home/damian/tmp/steps-detect/ESP32-S3-Touch-AMOLED-1.8/examples/ESP-IDF-v5.3.2/05_LVGL_WITH_RAM/components/esp_lcd_sh8601
+      path: /home/damian/tmp/steps-detect/steps_detector/step_alarm/components/esp_lcd_sh8601
       type: local
     version: 1.0.0
   espressif/cmake_utilities:
@@ -25,6 +25,16 @@ dependencies:
       registry_url: https://components.espressif.com/
       type: service
     version: 1.0.0~1
+  espressif/esp-dsp:
+    component_hash: ed9ac175b14e0414399a2b33c525579414b5bad19a2a67b12ea212def96f9a98
+    dependencies:
+    - name: idf
+      require: private
+      version: '>=4.2'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.8.2
   espressif/esp_io_expander:
     component_hash: 7b7f91270172e46ca4597e3874f48d8412e280e8c295559f5922ec38656e3e5f
     dependencies:
@@ -52,13 +62,13 @@ dependencies:
   espressif/esp_lcd_touch:
     dependencies: []
     source:
-      path: /home/damian/tmp/steps-detect/ESP32-S3-Touch-AMOLED-1.8/examples/ESP-IDF-v5.3.2/05_LVGL_WITH_RAM/components/espressif__esp_lcd_touch
+      path: /home/damian/tmp/steps-detect/steps_detector/step_alarm/components/espressif__esp_lcd_touch
       type: local
     version: 1.1.1
   espressif/esp_lcd_touch_ft5x06:
     dependencies: []
     source:
-      path: /home/damian/tmp/steps-detect/ESP32-S3-Touch-AMOLED-1.8/examples/ESP-IDF-v5.3.2/05_LVGL_WITH_RAM/components/espressif__esp_lcd_touch_ft5x06
+      path: /home/damian/tmp/steps-detect/steps_detector/step_alarm/components/espressif__esp_lcd_touch_ft5x06
       type: local
     version: 1.0.6
   idf:
@@ -76,11 +86,12 @@ direct_dependencies:
 - esp_lcd_sh8601
 - espressif/cmake_utilities
 - espressif/es8311
+- espressif/esp-dsp
 - espressif/esp_io_expander_tca9554
 - espressif/esp_lcd_touch
 - espressif/esp_lcd_touch_ft5x06
 - idf
 - lvgl/lvgl
-manifest_hash: 0b72148f276de8183b99ab9794b225f401764b8a7b9b4fe20123211f3bb36d29
+manifest_hash: 5204dbb6e46bb5bd4d2732954e1b294dba0897b39c383eb35784fa35a5f5589b
 target: esp32s3
 version: 2.0.0

@@ -17,11 +17,15 @@ idf_component_register(
         "gui/gui_pasos.c"
         "gui/gui_wifi.c"
         "gui/gui_hostname.c"
+        "alarm_logic/Classifier.c"
+        "alarm_logic/dsp_audio.c"
+        "alarm_logic/alarm_core.c"
 
     INCLUDE_DIRS
         "."
         "hardware"
         "gui"
+        "alarm_logic"
 )
 
 # Opciones de compilación para los demos de LVGL

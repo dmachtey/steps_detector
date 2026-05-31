@@ -7,6 +7,7 @@
 #include "hardware.h"
 #include "gui.h"
 #include "app_core.h"
+#include "alarm_logic/alarm_core.h"
 
 static const char *TAG = "MAIN";
 
@@ -40,6 +41,9 @@ void app_main(void) {
     app_core_init();
 
     ESP_LOGI(TAG, "==== ARRANQUE EXITOSO ====");
+
+    // Iniciar el vigilante del pontón
+    alarm_core_start_task();
 
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(1000));

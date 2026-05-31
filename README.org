@@ -4,7 +4,7 @@
 #
 # Created: Wed May 20 06:50:51 2026 (-0300)
 #
-# Last-Updated: Wed May 27 05:29:36 2026 (-0300)
+# Last-Updated: Sun May 31 04:37:58 2026 (-0300)
 #+LATEX_CLASS: article
 #+LATEX_CLASS_OPTIONS: [a4paper, 11pt, oneside]
 #+TITLE: Detección de Intrusión mediante Análisis Vibracional en Estructuras Flotantes
@@ -34,8 +34,10 @@ https://docs.waveshare.com/ESP32-S3-Touch-AMOLED-1.8
 - Waveshare ESP32-S3 1.8 Inch AMOLED Touch Display Development Board,
   32-Bit LX7 Dual-Core Processor, 368 x 448, Accelerometer & Gyroscope
   Sensor, ESP32 With Display, Support 3.7 V Li Battery(NOT Included)
+- It was selected so I don't have to take care of device stability at
+  least until I can manufacture it in a scale.
 
-** About this item
+** About this device
  - Equipped with ESP32-S3R8 Xtensa 32-bit LX7 dual-core processor, up
    to 240MHz main frequency. Supports 2.4GHz Wi-Fi (802.11 b/g/n) and
    Bluetooth 5 (LE), with onboard antenna. Built in 512KB of SRAM and
@@ -66,7 +68,7 @@ https://docs.waveshare.com/ESP32-S3-Touch-AMOLED-1.8
    of high contrast, wide viewing angle, rich colors, fast response,
    thinner design, and low power consumption, etc.
 
-** Imagen
+** Images
 #+CAPTION: Placa
 #+NAME: fig:placa
 #+ATTR_LaTeX: :width 0.6\textwidth\textwidth :options angle=0 :placement [H]
