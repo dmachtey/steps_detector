@@ -11,5 +11,5 @@ void gui_crear_pantallas(void);
 void gui_set_time(int hora, int minuto);
 void gui_update_chart_accel(int16_t x, int16_t y, int16_t z);
 void gui_update_chart_mic(int16_t mic_val);
-
+void gui_trigger_alarma_visual(void);
 #endif // GUI_H

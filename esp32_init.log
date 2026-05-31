@@ -1,0 +1,70 @@
+I (1482) HW_RTC: Inicializando RTC Interno...
+I (1487) HW_RTC: Configurando Zona Horaria a: CET-1CEST,M3.5.0,M10.5.0/3
+I (1495) HARDWARE_MANAGER: --- BSP INICIALIZADO CORRECTAMENTE ---
+I (1502) GUI_HW: Inicializando Motor LVGL...
+I (1509) GUI_HW: Motor gráfico iniciado y tarea corriendo.
+I (1536) APP_CORE: Nombre de equipo cargado: Datalogger
+I (1554) APP_CORE: Inicializando Core...
+I (1561) LOGGER: Módulo Logger inicializado.
+I (1561) LOGGER: === CONTENIDO DE /sdcard ===
+I (1567) LOGGER:  -> cac.txt                             |        0 bytes
+I (1577) LOGGER:  -> .Trash-1000                         |        0 bytes
+I (1579) LOGGER: ============================
+I (1585) pp: pp rom version: e7ae62f
+I (1589) net80211: net80211 rom version: e7ae62f
+I (1595) wifi:wifi driver task: 3fceebdc, prio:23, stack:6656, core=0
+I (1605) wifi:wifi firmware version: 05f15beed6
+I (1605) wifi:wifi certification version: v7.0
+I (1608) wifi:config NVS flash: enabled
+I (1612) wifi:config nano formating: disabled
+I (1616) wifi:Init data frame dynamic rx buffer num: 32
+I (1621) wifi:Init static rx mgmt buffer num: 5
+I (1625) wifi:Init management short buffer num: 32
+I (1630) wifi:Init dynamic tx buffer num: 32
+I (1634) wifi:Init static tx FG buffer num: 2
+I (1638) wifi:Init static rx buffer size: 1600
+I (1642) wifi:Init static rx buffer num: 10
+I (1646) wifi:Init dynamic rx buffer num: 32
+I (1650) wifi_init: rx ba win: 6
+I (1654) wifi_init: accept mbox: 6
+I (1658) wifi_init: tcpip mbox: 32
+I (1662) wifi_init: udp mbox: 6
+I (1666) wifi_init: tcp mbox: 6
+I (1670) wifi_init: tcp tx win: 5760
+I (1674) wifi_init: tcp rx win: 5760
+I (1678) wifi_init: tcp mss: 1440
+I (1682) wifi_init: WiFi IRAM OP enabled
+I (1687) wifi_init: WiFi RX IRAM OP enabled
+I (1692) APP_CORE: Iniciando conexión a la red guardada: linkmach
+I (1699) APP_CORE: Nombre de equipo cargado: Datalogger
+I (1705) phy_init: phy_version 700,8582a7fd,Feb 10 2025,20:13:11
+I (1741) wifi:mode : sta (1c:db:d4:7a:15:b8)
+I (1741) wifi:enable tsf
+W (1743) APP_CORE: >>> RAM Libre actual: 7332020 bytes <<<
+I (1743) MAIN: ==== ARRANQUE EXITOSO ====
+I (1747) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,0>, prof:1, snd_ch_cfg:0x0
+I (1755) wifi:state: init -> auth (0xb0)
+I (1767) wifi:state: auth -> init (0x1c0)
+I (1768) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,0>, prof:1, snd_ch_cfg:0x0
+W (1769) APP_CORE: WiFi desconectado. Reintentando...
+I (1779) DSP_AUDIO: Motor ESP-DSP y memoria PSRAM listos.
+I (1781) ALARM_CORE: Tarea de vigilancia iniciada. Analizando en tiempo real...
+W (4180) APP_CORE: WiFi desconectado. Reintentando...
+I (4186) wifi:new:<1,0>, old:<1,0>, ap:<255,255>, sta:<1,0>, prof:1, snd_ch_cfg:0x0
+I (4186) wifi:state: init -> auth (0xb0)
+I (4192) wifi:state: auth -> assoc (0x0)
+I (4225) wifi:state: assoc -> run (0x10)
+I (4251) wifi:connected with linkmach, aid = 1, channel 1, BW20, bssid = fe:70:21:80:e2:06
+I (4251) wifi:security: WPA2-PSK, phy: bgn, rssi: -22
+I (4253) wifi:pm start, type: 1
+
+I (4255) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us
+I (4263) wifi:set rx beacon pti, rx_bcn_pti: 0, bcn_timeout: 25000, mt_pti: 0, mt_time: 10000
+I (4288) wifi:<ba-add>idx:0 (ifx:0, fe:70:21:80:e2:06), tid:0, ssn:1, winSize:64
+I (4341) wifi:dp: 2, bi: 102400, li: 4, scale listen interval from 307200 us to 409600 us
+I (4341) wifi:AP's beacon interval = 102400 us, DTIM period = 2
+I (5272) esp_netif_handlers: sta ip: 172.22.153.18, mask: 255.255.255.0, gw: 172.22.153.159
+I (5273) APP_CORE: ¡WiFi Conectado! IP Asignada: 172.22.153.18
+I (5277) HW_RTC: Iniciando servicio SNTP...
+I (6579) GUI: 5s de inactividad en Main. Activando alarma...
+I (8236) HW_RTC: ¡Sincronización NTP exitosa!

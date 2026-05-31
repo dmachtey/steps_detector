@@ -9,6 +9,7 @@
 // --- Tus librerías de Hardware reales ---
 #include "../hardware/hw_imu.h"
 #include "../hardware/hw_mic.h"
+#include "../gui/gui.h"
 
 static const char *TAG = "ALARM_CORE";
 
@@ -73,6 +74,8 @@ static void alarm_task(void *pvParameters) {
         // -------------------------------------------------------------
         if (prediccion == 1) {
             ESP_LOGW(TAG, "⚠️ ¡ALERTA! PASOS DETECTADOS EN LA ESTRUCTURA ⚠️");
+            // Llamamos a la GUI para que se ponga en rojo por 30 segundos
+            gui_trigger_alarma_visual();
 
             // ---> ACÁ VA TU ACCIÓN FÍSICA <---
             // (Ej: gpio_set_level(PIN_RELE, 1); o mandar alerta por red)
