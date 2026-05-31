@@ -27,12 +27,17 @@ bool hw_imu_read(int16_t *x, int16_t *y, int16_t *z) {
     uint8_t reg = 0x35;
     uint8_t raw_data[6];
 
-    esp_err_t ret = i2c_master_write_read_device(IMU_I2C_PORT, IMU_ADDR, &reg, 1, raw_data, 6, pdMS_TO_TICKS(50));
+    // Bajamos el timeout a 2ms para que no se trabe peleando el bus con el Touch
+    esp_err_t ret = i2c_master_write_read_device(IMU_I2C_PORT, IMU_ADDR, &reg, 1, raw_data, 6, pdMS_TO_TICKS(2));
+
     if (ret == ESP_OK) {
         *x = (int16_t)((raw_data[1] << 8) | raw_data[0]);
         *y = (int16_t)((raw_data[3] << 8) | raw_data[2]);
         *z = (int16_t)((raw_data[5] << 8) | raw_data[4]);
         return true;
     }
+
+    // Si la lectura falló por colisión con el touch, el alarm_core pondrá 0.0f
+    // y mantendremos intacto el timing de 50Hz.
     return false;
 }

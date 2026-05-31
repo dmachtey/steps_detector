@@ -6,6 +6,8 @@
 #include "app_core.h" // Asegurate de que esté este include arriba de todo
 #include "esp_log.h"
 #include "../hardware/hw_rtc.h"
+#include "../alarm_logic/alarm_core.h"
+
 
 // Declaración REAL de los punteros (el espacio en memoria existe acá)
 lv_obj_t * scr_main = NULL;
@@ -31,8 +33,11 @@ static void inactividad_timer_cb(lv_timer_t * timer) {
             // Resetea el tiempo de inactividad para que no se dispare en loop
             lv_disp_trig_activity(NULL);
 
-            // Cambia de pantalla e inicia el registro
+            // Cambia de pantalla
             lv_scr_load(scr_alarma);
+
+            // --- NUEVO: ENCENDEMOS LA IA Y EL LOGGER ---
+            alarm_core_set_state(true);
             app_core_iniciar_grabacion();
         }
     }
@@ -73,9 +78,14 @@ lv_obj_t * crear_reloj_superior(lv_obj_t * parent) {
 }
 
 // Helper global: Botón Volver genérico al Main
+// Helper global: Botón Volver genérico al Main
 void btn_volver_cb(lv_event_t * e) {
     if(lv_event_get_code(e) == LV_EVENT_CLICKED) {
         lv_scr_load(scr_main);
+
+        // --- NUEVO: APAGAMOS TODO AL SALIR ---
+        alarm_core_set_state(false);
+        app_core_detener_grabacion();
     }
 }
 

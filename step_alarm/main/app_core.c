@@ -9,7 +9,7 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
-// --- ESTAS LIBRERÍAS FALTABAN ---
+// --- LIBRERÍAS DEL SISTEMA ---
 #include <stdlib.h>
 #include <string.h>
 #include "nvs_flash.h"
@@ -17,18 +17,22 @@
 #include "esp_wifi.h"
 #include "esp_netif.h"
 #include "esp_event.h"
-// --------------------------------
 #include "esp_system.h"
-
 
 static const char *TAG = "APP_CORE";
 static volatile estado_logger_t estado_actual = ESTADO_REPOSO;
 static volatile bool ui_telemetria_activa = false;
 
+// Estructura de datos del acelerómetro
 typedef struct { int16_t x; int16_t y; int16_t z; } imu_data_t;
 
+// Colas privadas para la UI
 static QueueHandle_t imu_queue = NULL;
 static QueueHandle_t mic_queue = NULL;
+
+// --- COLAS PÚBLICAS PARA LA ALARMA (Productor-Consumidor) ---
+QueueHandle_t alarm_imu_queue = NULL;
+QueueHandle_t alarm_mic_queue = NULL;
 
 // =========================================================
 // 1. TAREA IMU (50 Hz)
@@ -40,11 +44,17 @@ static void imu_sampler_task(void *arg) {
 
     while(1) {
         if (hw_imu_read(&data.x, &data.y, &data.z)) {
+            // Reparto 1: UI
             if (ui_telemetria_activa) {
                 xQueueSendToBack(imu_queue, &data, 0);
             }
+            // Reparto 2: Datalogger (Graba el dato crudo en SD)
             if (estado_actual == ESTADO_GRABANDO) {
                 logger_feed_imu(data.x, data.y, data.z);
+            }
+            // Reparto 3: IA / Alarma (Manda crudo por la cola)
+            if (alarm_imu_queue != NULL) {
+                xQueueSendToBack(alarm_imu_queue, &data, 0);
             }
         }
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
@@ -54,13 +64,15 @@ static void imu_sampler_task(void *arg) {
 // =========================================================
 // 2. TAREA MICRÓFONO (Manejo de Buffers DMA 8 KHz)
 // =========================================================
-#define MIC_BUFFER_SAMPLES 400
+// ¡Buffer ajustado a 160 (20ms) para sincronizar perfecto con el IMU!
+#define MIC_BUFFER_SAMPLES 160
 
 static void mic_sampler_task(void *arg) {
     int16_t audio_buffer[MIC_BUFFER_SAMPLES];
 
     while(1) {
         if (hw_mic_read_dma(audio_buffer, MIC_BUFFER_SAMPLES)) {
+            // Reparto 1: UI (Calcula pico máximo)
             if (ui_telemetria_activa) {
                 int16_t max_peak = 0;
                 for (int i = 0; i < MIC_BUFFER_SAMPLES; i++) {
@@ -70,8 +82,14 @@ static void mic_sampler_task(void *arg) {
                 xQueueSendToBack(mic_queue, &max_peak, 0);
             }
 
+            // Reparto 2: Datalogger (Graba chunk en SD)
             if (estado_actual == ESTADO_GRABANDO) {
                 logger_feed_mic(audio_buffer, MIC_BUFFER_SAMPLES);
+            }
+
+            // Reparto 3: IA / Alarma (Manda chunk por la cola)
+            if (alarm_mic_queue != NULL) {
+                xQueueSendToBack(alarm_mic_queue, audio_buffer, 0);
             }
         }
     }
@@ -93,6 +111,7 @@ static void telemetria_ui_task(void *arg) {
                 gui_update_chart_mic(rx_mic);
             }
         } else {
+            // Limpia búferes si la gráfica está apagada para no atrasarse
             xQueueReset(imu_queue);
             xQueueReset(mic_queue);
         }
@@ -107,14 +126,21 @@ void app_core_init(void) {
 
     logger_init();
 
+    // Crear Colas Privadas UI
     imu_queue = xQueueCreate(20, sizeof(imu_data_t));
     mic_queue = xQueueCreate(20, sizeof(int16_t));
+    
+    // Crear Colas Públicas IA (Productor-Consumidor)
+    alarm_imu_queue = xQueueCreate(10, sizeof(imu_data_t));
+    alarm_mic_queue = xQueueCreate(10, MIC_BUFFER_SAMPLES * sizeof(int16_t));
 
     app_core_wifi_init();
 
+    // Lanzar Tareas
     xTaskCreatePinnedToCore(imu_sampler_task, "IMU_TASK", 4096, NULL, 20, NULL, 1);
     xTaskCreatePinnedToCore(mic_sampler_task, "MIC_TASK", 4096, NULL, 21, NULL, 1);
     xTaskCreatePinnedToCore(telemetria_ui_task, "UI_TASK", 4096, NULL, 5, NULL, 0);
+    
     ESP_LOGW(TAG, ">>> RAM Libre actual: %ld bytes <<<", (long)esp_get_free_heap_size());
 }
 

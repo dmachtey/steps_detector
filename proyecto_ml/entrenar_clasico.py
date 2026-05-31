@@ -36,8 +36,25 @@ def main():
     # 1. Cargar Datos
     print("\n[1] Cargando dataset multimodal...")
     datos = np.load(DATA_PATH)
-    X_accel = datos['X_accel']  # (N, 150, 3)
-    X_audio = datos['X_audio']  # (N, 24000)
+
+    # --- NORMALIZACIÓN EXPLÍCITA (ESPEJO DEL ESP32) ---
+    DIV_IMU = 1000.0
+    DIV_AUDIO = 7000.0
+
+    X_accel_raw = datos['X_accel'].astype(np.float32)
+    X_audio_raw = datos['X_audio'].astype(np.float32)
+
+    # Restamos la media (la Gravedad) de cada ventana
+    for i in range(X_accel_raw.shape[0]):
+        X_accel_raw[i, :, 0] -= np.mean(X_accel_raw[i, :, 0]) # Limpiar Eje X
+        X_accel_raw[i, :, 1] -= np.mean(X_accel_raw[i, :, 1]) # Limpiar Eje Y
+        X_accel_raw[i, :, 2] -= np.mean(X_accel_raw[i, :, 2]) # Limpiar Eje Z
+
+    # Normalizamos y Saturamos
+    X_accel = np.clip(X_accel_raw / DIV_IMU, -1.0, 1.0)
+    X_audio = np.clip(X_audio_raw / DIV_AUDIO, -1.0, 1.0)
+
+
     y_text = datos['y']
     y = np.array([1 if label == 'steps' else 0 for label in y_text])
 

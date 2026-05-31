@@ -1,6 +1,7 @@
 function graficador(basename)
     % =========================================================================
     % Graficador de Datos: Proyecto Detección de Pasos en Estructura Flotante
+    % (Normalización de Hardware Espejo a C y Python con Filtro DC Blocker)
     % =========================================================================
 
     archivo_csv = [basename, '_acelerometro.csv'];
@@ -14,30 +15,33 @@ function graficador(basename)
     % --- 2. Cargar Acelerómetro ---
     disp('Cargando datos del acelerómetro...');
     accel_data = dlmread(archivo_csv, ',', 1, 0);
-    x = accel_data(:, 2);
-    y = accel_data(:, 3);
-    z = accel_data(:, 4);
+    x_raw = accel_data(:, 2);
+    y_raw = accel_data(:, 3);
+    z_raw = accel_data(:, 4);
 
     fs_accel = 50;
-    t_accel = (0:length(x)-1)' / fs_accel;
+    t_accel = (0:length(x_raw)-1)' / fs_accel;
 
-    % --- 3. Normalización Robusta (Filtro Percentil 99%) ---
-    disp('Filtrando picos espurios y normalizando...');
+    % --- 3. DC Blocker y Normalización ---
+    disp('Aplicando Filtro de Gravedad, Ganancia y Recorte (Clipping)...');
 
-    % Ordenar valores absolutos
-    sx = sort(abs(x)); sy = sort(abs(y)); sz = sort(abs(z)); sa = sort(abs(audio_data));
+    DIVISOR_IMU = 1000.0;
+    DIVISOR_AUDIO = 7000.0;
 
-    % Obtener el índice del 99% (ignorando el 1% de picos más altos)
-    idx_x = max(1, round(length(sx) * 0.99));
-    idx_y = max(1, round(length(sy) * 0.99));
-    idx_z = max(1, round(length(sz) * 0.99));
-    idx_a = max(1, round(length(sa) * 0.99));
+    % Filtro DC Blocker para el IMU (Restamos la media para eliminar gravedad)
+    x_limpio = x_raw - mean(x_raw);
+    y_limpio = y_raw - mean(y_raw);
+    z_limpio = z_raw - mean(z_raw);
 
-    % Normalizar usando ese percentil como "máximo real"
-    if sx(idx_x) ~= 0, x = x ./ sx(idx_x); end
-    if sy(idx_y) ~= 0, y = y ./ sy(idx_y); end
-    if sz(idx_z) ~= 0, z = z ./ sz(idx_z); end
-    if sa(idx_a) ~= 0, audio_data = audio_data ./ sa(idx_a); end
+    % Aplicamos Ganancia y CLAMP al IMU (El recorte a los límites -1.0 y 1.0)
+    x = max(-1.0, min(1.0, x_limpio / DIVISOR_IMU));
+    y = max(-1.0, min(1.0, y_limpio / DIVISOR_IMU));
+    z = max(-1.0, min(1.0, z_limpio / DIVISOR_IMU));
+
+    % audioread ya divide por 32768 por defecto.
+    % Multiplicamos para recuperar el RAW original, y aplicamos nuestro divisor:
+    audio_crudo = audio_data * 32768.0;
+    audio_data = max(-1.0, min(1.0, audio_crudo / DIVISOR_AUDIO));
 
     % --- 4. Recorte de Sincronización ---
     t_util = min(max(t_audio), max(t_accel));
@@ -52,36 +56,35 @@ function graficador(basename)
     x = x(idx_accel); y = y(idx_accel); z = z(idx_accel);
 
     % --- 5. Graficar ---
-    disp('Generando gráficas enfocadas en la banda de energía...');
+    disp('Generando gráficas en escalas reales...');
     screen_size = get(0, 'ScreenSize');
     figure('Name', ['Análisis de Pasos - Muestra: ', basename], 'Position', screen_size);
 
-
-    limites_y = [-5 5]; % Aleja la vista vertical (hace que las ondas se vean más chicas)
-
+    % --- ESCALAS REALES ---
+    % Como aplicamos CLAMP entre -1 y 1, fijamos los ejes en 1.2 para ver la saturación clara
+    limites_y_audio = [-1.2 1.2];
+    limites_y_imu = [-1.2 1.2];
 
     subplot(4, 1, 1);
     plot(t_audio, audio_data, 'k');
-    title('Señal Acústica (Micrófono)');
-    ylabel('Amplitud'); grid on; xlim([0 t_util]); ylim(limites_y);
+    title('Señal Acústica (Micrófono) [Normalizada y Recortada]');
+    ylabel('Amplitud'); grid on; xlim([0 t_util]); ylim(limites_y_audio);
 
-
-    limites_y = [-1.5 1.5]; % Forzamos el zoom en la banda útil
     subplot(4, 1, 2);
     plot(t_accel, x, 'r', 'LineWidth', 1.2);
-    title('Movimiento Estructural - Eje X');
-    ylabel('Accel (Norm)'); grid on; xlim([0 t_util]); ylim(limites_y);
+    title('Movimiento - Eje X (Sin Gravedad, Normalizado)');
+    ylabel('Amplitud (Norm)'); grid on; xlim([0 t_util]); ylim(limites_y_imu);
 
     subplot(4, 1, 3);
     plot(t_accel, y, 'b', 'LineWidth', 1.2);
-    title('Movimiento Estructural - Eje Y');
-    ylabel('Accel (Norm)'); grid on; xlim([0 t_util]); ylim(limites_y);
+    title('Movimiento - Eje Y (Sin Gravedad, Normalizado)');
+    ylabel('Amplitud (Norm)'); grid on; xlim([0 t_util]); ylim(limites_y_imu);
 
     subplot(4, 1, 4);
     plot(t_accel, z, 'g', 'LineWidth', 1.2);
-    title('Movimiento Estructural - Eje Z');
+    title('Movimiento - Eje Z (Sin Gravedad, Normalizado)');
     xlabel('Tiempo (Segundos)');
-    ylabel('Accel (Norm)'); grid on; xlim([0 t_util]); ylim(limites_y);
+    ylabel('Amplitud (Norm)'); grid on; xlim([0 t_util]); ylim(limites_y_imu);
 
     linkaxes(findall(gcf, 'type', 'axes'), 'x');
     disp('¡Gráficas individuales generadas con éxito!');
