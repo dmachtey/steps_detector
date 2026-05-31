@@ -1,0 +1,47 @@
+python3 entrenar_clasico.py
+=== Pipeline Clásico: Random Forest + Audio DSP ===
+
+[1] Cargando dataset multimodal...
+
+[2] Extrayendo características (Acelerómetro Raw + Audio DSP)...
+ -> Forma final de los datos: (239, 453) (Ventanas, Características)
+
+[3] Entrenando Random Forest...
+
+[4] Evaluando Resultados del Examen...
+
+--- REPORTE DE RENDIMIENTO ---
+Total de ventanas evaluadas: 30
+✔️  Pasos detectados (TP): 14
+✔️  Reposo detectado (TN): 15
+❌ Falsas Alarmas (FP):  0
+❌ Pasos Ignorados (FN): 1
+------------------------------
+
+[5] Generando código ANSI C...
+ -> ¡ÉXITO! Classifier.c exportado a: ../step_alarm/main/alarm_logic
+ -> (Asegurate de tener el Classifier.h copiado en esa carpeta también).
+proyecto_ml$ python3 entrenar_clasico.py
+=== Pipeline Clásico: Random Forest + Audio DSP ===
+
+[1] Cargando dataset multimodal...
+
+[2] Extrayendo características (Acelerómetro Raw + Audio DSP)...
+ -> Forma final de los datos: (239, 453) (Ventanas, Características)
+
+[3] Entrenando Random Forest...
+
+[4] Evaluando Resultados del Examen...
+
+--- REPORTE DE RENDIMIENTO ---
+Total de ventanas evaluadas: 30
+✔️  Pasos detectados (TP): 15
+✔️  Reposo detectado (TN): 15
+❌ Falsas Alarmas (FP):  0
+❌ Pasos Ignorados (FN): 0
+------------------------------
+
+[5] Generando código ANSI C...
+ -> ¡ÉXITO! Classifier.c exportado a: ../step_alarm/main/alarm_logic
+ -> (Asegurate de tener el Classifier.h copiado en esa carpeta
+ también).
