@@ -1,0 +1,422 @@
+I (26) boot: ESP-IDF v5.3.2-887-g8bb65e6d85 2nd stage bootloader
+I (26) boot: compile time Jun  1 2026 04:41:16
+I (27) boot: Multicore bootloader
+I (31) boot: chip revision: v0.2
+I (34) boot: efuse block revision: v1.3
+I (39) qio_mode: Enabling default flash chip QIO
+I (44) boot.esp32s3: Boot SPI Speed : 80MHz
+I (49) boot.esp32s3: SPI Mode       : QIO
+I (54) boot.esp32s3: SPI Flash Size : 16MB
+I (59) boot: Enabling RNG early entropy source...
+I (64) boot: Partition Table:
+I (68) boot: ## Label            Usage          Type ST Offset   Length
+I (75) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (82) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (90) boot:  2 factory          factory app      00 00 00010000 00300000
+I (97) boot: End of partition table
+I (101) esp_image: segment 0: paddr=00010020 vaddr=3c070020 size=22330h (140080) map
+I (131) esp_image: segment 1: paddr=00032358 vaddr=3fc9c400 size=03320h ( 13088) load
+I (134) esp_image: segment 2: paddr=00035680 vaddr=40374000 size=0a998h ( 43416) load
+I (145) esp_image: segment 3: paddr=00040020 vaddr=42000020 size=6ddd0h (450000) map
+I (212) esp_image: segment 4: paddr=000addf8 vaddr=4037e998 size=0da38h ( 55864) load
+I (233) boot: Loaded app from partition at offset 0x10000
+I (233) boot: Disabling RNG early entropy source...
+I (245) octal_psram: vendor id    : 0x0d (AP)
+I (245) octal_psram: dev id       : 0x02 (generation 3)
+I (245) octal_psram: density      : 0x03 (64 Mbit)
+I (250) octal_psram: good-die     : 0x01 (Pass)
+I (255) octal_psram: Latency      : 0x01 (Fixed)
+I (260) octal_psram: VCC          : 0x01 (3V)
+I (265) octal_psram: SRF          : 0x01 (Fast Refresh)
+I (271) octal_psram: BurstType    : 0x01 (Hybrid Wrap)
+I (277) octal_psram: BurstLen     : 0x01 (32 Byte)
+I (282) octal_psram: Readlatency  : 0x02 (10 cycles@Fixed)
+I (289) octal_psram: DriveStrength: 0x00 (1/1)
+I (294) MSPI Timing: PSRAM timing tuning index: 5
+I (299) esp_psram: Found 8MB PSRAM device
+I (304) esp_psram: Speed: 80MHz
+I (319) mmu_psram: Read only data copied and mapped to SPIRAM
+I (349) mmu_psram: Instructions copied and mapped to SPIRAM
+I (349) cpu_start: Multicore app
+I (612) esp_psram: SPI SRAM memory test OK
+I (621) cpu_start: Pro cpu start user code
+I (621) cpu_start: cpu freq: 240000000 Hz
+I (621) app_init: Application information:
+I (624) app_init: Project name:     step_alarm
+I (629) app_init: App version:      13f00e8-dirty
+I (634) app_init: Compile time:     Jun  1 2026 04:41:11
+I (640) app_init: ELF file SHA256:  87ae18927...
+I (645) app_init: ESP-IDF:          v5.3.2-887-g8bb65e6d85
+I (651) efuse_init: Min chip rev:     v0.0
+I (656) efuse_init: Max chip rev:     v0.99
+I (661) efuse_init: Chip rev:         v0.2
+I (666) heap_init: Initializing. RAM available for dynamic allocation:
+I (673) heap_init: At 3FCA0DD8 len 00048938 (290 KiB): RAM
+I (679) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+I (685) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+I (692) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+I (698) esp_psram: Adding pool of 7552K of PSRAM memory to heap allocator
+I (706) spi_flash: detected chip: generic
+I (710) spi_flash: flash io: qio
+W (714) i2c: This driver is an old driver, please migrate your application code to adapt `driver/i2c_master.h`
+I (725) sleep: Configure to isolate all GPIO pins in sleep state
+I (731) sleep: Enable automatic switching of GPIO sleep configuration
+I (739) main_task: Started on CPU0
+I (743) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+I (752) main_task: Calling app_main()
+I (756) MAIN: ==== INICIANDO DATALOGGER ====
+I (769) HARDWARE_MANAGER: --- INICIANDO SECUENCIA BSP ---
+I (770) HW_DISPLAY: Inicializando I2C Compartido (SCL:14, SDA:15)...
+I (774) HW_DISPLAY: Configurando Expansor de Energía TCA9554...
+I (981) HW_DISPLAY: Inicializando QSPI para la Pantalla...
+I (981) sh8601: LCD panel create success, version: 1.0.0
+I (1212) HW_DISPLAY: Inicializando Touch FT5x06...
+I (1212) gpio: GPIO[21]| InputEn: 1| OutputEn: 0| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:2
+I (1217) HW_IMU: Configurando IMU QMI8658 en el bus I2C...
+I (1272) HW_MIC: Inicializando ES8311 y DMA I2S a 8 KHz...
+I (1272) gpio: GPIO[46]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0
+I (1297) ES8311: ES8311 in Slave mode and I2S format
+I (1300) HW_MIC: ES8311 configurado correctamente.
+I (1300) HW_SD: Inicializando Tarjeta SD vía SDMMC...
+I (1303) gpio: GPIO[2]| InputEn: 0| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0
+I (1313) gpio: GPIO[1]| InputEn: 0| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0
+I (1322) gpio: GPIO[3]| InputEn: 0| OutputEn: 0| OpenDrain: 0| Pullup: 1| Pulldown: 0| Intr:0
+I (1386) HW_SD: ¡SD montada exitosamente en /sdcard!
+Name: APPSD
+Type: SDHC/SDXC
+Speed: 20.00 MHz (limit: 20.00 MHz)
+Size: 15800MB
+CSD: ver=2, sector_size=512, capacity=32358400 read_bl_len=9
+SSR: bus_width=1
+I (1394) HW_RTC: Inicializando RTC Interno...
+I (1399) HW_RTC: Configurando Zona Horaria a: CET-1CEST,M3.5.0,M10.5.0/3
+I (1407) HARDWARE_MANAGER: --- BSP INICIALIZADO CORRECTAMENTE ---
+I (1414) GUI_HW: Inicializando Motor LVGL...
+I (1421) GUI_HW: Motor gráfico iniciado y tarea corriendo.
+I (1448) APP_CORE: Nombre de equipo cargado: Datalogger
+I (1465) APP_CORE: Inicializando Core...
+I (1471) LOGGER: Módulo Logger inicializado.
+I (1472) LOGGER: === CONTENIDO DE /sdcard ===
+I (1478) LOGGER:  -> cac.txt                             |        0 bytes
+I (1483) LOGGER:  -> raw-data                            |        0 bytes
+I (1495) LOGGER:  -> .Trash-1000                         |        0 bytes
+I (1497) LOGGER: ============================
+W (1502) APP_CORE: ⚠️ MODO SIMULADOR ACTIVO: Sensores I2C/I2S deshabilitados. ⚠️
+W (1511) APP_CORE: >>> RAM Libre actual: 7797880 bytes <<<
+I (1517) MAIN: ==== ARRANQUE EXITOSO ====
+I (1534) DSP_AUDIO: Motor ESP-DSP y memoria PSRAM listos.
+I (1534) ALARM_CORE: Cerebro IA iniciado. Modo Features: 1. Esperando armado...
+I (1537) ALARM_CORE: Vigilancia ACTIVADA
+W (1541) MOCK_SENSORS: INICIANDO MODO SIMULADOR DESDE SD...
+I (1550) MOCK_SENSORS: ==========================================
+I (1554) MOCK_SENSORS: ▶ INYECTANDO: sin_caminando_20260529_121629
+I (1561) MOCK_SENSORS: ==========================================
+I (4564) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.45/-0.38 | Audio(RMS): 0.0561
+I (5567) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0501
+I (6493) GUI: 5s de inactividad en Main. Activando alarma...
+I (6493) ALARM_CORE: Vigilancia ACTIVADA
+I (6493) ALARM_CORE: Vigilancia ACTIVADA
+I (6568) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.05 | Audio(RMS): 0.0479
+I (7568) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0502
+I (8570) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.05 | Audio(RMS): 0.0488
+I (9572) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.05 | Audio(RMS): 0.0476
+I (10573) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.03 | Audio(RMS): 0.0466
+I (11575) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.03 | Audio(RMS): 0.0435
+I (12577) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.03 | Audio(RMS): 0.0396
+I (13579) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.05 | Audio(RMS): 0.0377
+I (14580) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.05 | Audio(RMS): 0.0385
+I (15580) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0387
+I (16581) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0374
+I (17584) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0351
+I (18585) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.03 | Audio(RMS): 0.0363
+I (19586) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.03 | Audio(RMS): 0.0420
+I (20588) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.03 | Audio(RMS): 0.0459
+I (21590) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.02 | Audio(RMS): 0.0470
+I (22590) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.04 | Audio(RMS): 0.0432
+I (23591) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.04 | Audio(RMS): 0.0400
+I (24593) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.05 | Audio(RMS): 0.0398
+I (25595) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.04 | Audio(RMS): 0.0402
+I (26596) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.04 | Audio(RMS): 0.0411
+I (27596) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.04 | Audio(RMS): 0.0410
+I (28596) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.04 | Audio(RMS): 0.0409
+I (29598) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0409
+I (30602) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0437
+I (31601) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.06 | Audio(RMS): 0.0554
+I (32603) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0769
+I (33604) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0747
+I (34605) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0680
+I (35606) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.04 | Audio(RMS): 0.0420
+I (36607) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.04 | Audio(RMS): 0.0412
+I (37610) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.04 | Audio(RMS): 0.0367
+I (38611) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.05 | Audio(RMS): 0.0367
+I (39612) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.04 | Audio(RMS): 0.0411
+I (40614) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.03 | Audio(RMS): 0.0429
+I (41616) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.04 | Audio(RMS): 0.0428
+I (42618) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.04 | Audio(RMS): 0.0393
+I (43617) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.03 | Audio(RMS): 0.0392
+I (44619) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.03 | Audio(RMS): 0.0404
+I (45621) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.05 | Audio(RMS): 0.0389
+I (46621) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.05 | Audio(RMS): 0.0386
+I (47623) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.05 | Audio(RMS): 0.0384
+I (48624) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0410
+I (49627) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0418
+I (50628) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0405
+I (51629) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0404
+I (52629) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0414
+I (53630) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.04 | Audio(RMS): 0.0462
+I (54632) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.04 | Audio(RMS): 0.0477
+I (55632) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0465
+I (56633) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.03 | Audio(RMS): 0.0446
+I (57637) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.03 | Audio(RMS): 0.0421
+I (58637) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.04 | Audio(RMS): 0.0403
+I (59638) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0384
+I (60638) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0392
+I (61640) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.05 | Audio(RMS): 0.0417
+I (62643) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.04 | Audio(RMS): 0.0438
+I (63642) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0431
+I (64643) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.03 | Audio(RMS): 0.0418
+I (65645) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.03 | Audio(RMS): 0.0426
+I (66648) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.03 | Audio(RMS): 0.0458
+I (67649) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0489
+I (68649) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0459
+I (69651) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0437
+I (70652) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0416
+I (71653) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0420
+I (72654) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0566
+I (73656) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.05 | Audio(RMS): 0.0655
+I (74657) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0653
+I (75658) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0524
+I (76659) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0395
+I (77662) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.05 | Audio(RMS): 0.0387
+I (78663) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.04 | Audio(RMS): 0.0414
+I (79663) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.04 | Audio(RMS): 0.0432
+I (80665) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.07/-0.04 | Audio(RMS): 0.0425
+I (81666) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.07/-0.04 | Audio(RMS): 0.0405
+I (82668) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.04 | Audio(RMS): 0.0386
+I (83668) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.04 | Audio(RMS): 0.0388
+I (84671) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0382
+I (85673) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.0393
+I (86674) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.07/-0.03 | Audio(RMS): 0.0404
+I (87675) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.07/-0.03 | Audio(RMS): 0.0407
+I (88676) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.08/-0.05 | Audio(RMS): 0.0389
+I (89677) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.08/-0.05 | Audio(RMS): 0.0377
+I (90678) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.08/-0.05 | Audio(RMS): 0.0369
+I (91679) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.02/-0.04 | Audio(RMS): 0.0379
+I (92682) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.02/-0.04 | Audio(RMS): 0.0462
+I (93685) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.04 | Audio(RMS): 0.0452
+I (94684) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.04 | Audio(RMS): 0.0443
+I (95686) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.04 | Audio(RMS): 0.0360
+I (96687) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.03 | Audio(RMS): 0.0368
+I (97689) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.03 | Audio(RMS): 0.0387
+I (98691) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.03 | Audio(RMS): 0.0395
+I (99690) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.03 | Audio(RMS): 0.0431
+I (100692) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.03 | Audio(RMS): 0.0416
+I (101693) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.04 | Audio(RMS): 0.0515
+I (102696) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0483
+I (103697) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0484
+I (104690) MOCK_SENSORS: ⏹ FIN DEL ARCHIVO: sin_caminando_20260529_121629. Siguiente en 3 seg...
+I (104877) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.05 | Audio(RMS): 0.0373
+I (107691) MOCK_SENSORS: ==========================================
+I (107691) MOCK_SENSORS: ▶ INYECTANDO: caminando_20260529_121247
+I (107694) MOCK_SENSORS: ==========================================
+I (108415) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.09 | Audio(RMS): 0.0410
+W (108416) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (111421) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.09/-0.07 | Audio(RMS): 0.0480
+W (111421) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (114426) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.35/-0.17 | Audio(RMS): 0.0459
+W (114426) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (117428) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.37/-0.34 | Audio(RMS): 0.0629
+W (117429) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (120431) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.50/-0.38 | Audio(RMS): 0.0560
+W (120432) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (123435) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.74/-1.00 | Audio(RMS): 0.0629
+W (123435) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (126439) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.08/-0.07 | Audio(RMS): 0.0495
+W (126440) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (129444) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.58/-0.44 | Audio(RMS): 0.0461
+W (129445) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (132451) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.15/-0.19 | Audio(RMS): 0.0753
+W (132452) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (135455) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.29/-0.23 | Audio(RMS): 0.2139
+W (135455) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (138459) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.62/-0.34 | Audio(RMS): 0.0520
+W (138460) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (141465) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.04 | Audio(RMS): 0.0457
+W (141466) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (144469) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.58/-0.29 | Audio(RMS): 0.0603
+W (144470) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (147472) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.15/-0.13 | Audio(RMS): 0.0790
+W (147473) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (150480) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.43/-0.34 | Audio(RMS): 0.0656
+W (150480) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (153479) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.08 | Audio(RMS): 0.0550
+W (153480) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (156487) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.18/-0.33 | Audio(RMS): 0.0458
+W (156487) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (159488) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.30/-0.28 | Audio(RMS): 0.0614
+W (159488) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (162491) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0938
+I (163494) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.11/-0.13 | Audio(RMS): 0.0877
+W (163494) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (166497) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.44/-1.00 | Audio(RMS): 0.0487
+W (166497) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (169501) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.07/-0.05 | Audio(RMS): 0.0686
+W (169502) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (172506) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.29/-0.39 | Audio(RMS): 0.0523
+W (172507) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (175510) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0845
+I (176511) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.05 | Audio(RMS): 0.1030
+I (177513) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.15/-0.07 | Audio(RMS): 0.1015
+W (177514) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (180519) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.86/-0.69 | Audio(RMS): 0.0474
+W (180520) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (183523) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.05 | Audio(RMS): 0.0694
+I (184522) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.05 | Audio(RMS): 0.0747
+I (185524) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.08 | Audio(RMS): 0.0849
+W (185525) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (188528) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.58/-1.00 | Audio(RMS): 0.0906
+W (188529) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (191533) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.07 | Audio(RMS): 0.0817
+W (191533) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (194540) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.07/-0.07 | Audio(RMS): 0.0622
+W (194540) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (197541) ALARM_CORE: Eval -> IMU_Z(Max/Min): 1.00/-0.70 | Audio(RMS): 0.0596
+W (197542) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (200544) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.36/-0.24 | Audio(RMS): 0.0770
+W (200545) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (203550) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.03 | Audio(RMS): 0.0687
+I (204551) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.18/-0.08 | Audio(RMS): 0.0640
+W (204552) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (207555) ALARM_CORE: Eval -> IMU_Z(Max/Min): 1.00/-1.00 | Audio(RMS): 0.0616
+W (207555) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (210560) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.04 | Audio(RMS): 0.0510
+W (210560) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (213563) ALARM_CORE: Eval -> IMU_Z(Max/Min): 1.00/-0.65 | Audio(RMS): 0.0593
+W (213564) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (216567) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.07/-0.08 | Audio(RMS): 0.1250
+W (216567) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (219572) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.04 | Audio(RMS): 0.0605
+I (220572) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.04 | Audio(RMS): 0.0697
+W (220573) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (223576) ALARM_CORE: Eval -> IMU_Z(Max/Min): 1.00/-1.00 | Audio(RMS): 0.0508
+W (223577) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (226582) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.08/-0.05 | Audio(RMS): 0.0565
+I (227583) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.03 | Audio(RMS): 0.0717
+I (228584) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.31/-0.34 | Audio(RMS): 0.0730
+W (228585) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (231591) ALARM_CORE: Eval -> IMU_Z(Max/Min): 1.00/-1.00 | Audio(RMS): 0.0876
+W (231591) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (234595) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0465
+W (234595) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (237598) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0441
+W (237599) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (240604) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.13/-0.17 | Audio(RMS): 0.0736
+W (240605) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (243608) ALARM_CORE: Eval -> IMU_Z(Max/Min): 1.00/-1.00 | Audio(RMS): 0.1047
+W (243609) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (246612) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.07 | Audio(RMS): 0.0474
+W (246612) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (249617) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.04 | Audio(RMS): 0.0638
+I (250619) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.04 | Audio(RMS): 0.0526
+I (251621) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.09/-0.57 | Audio(RMS): 0.0435
+W (251621) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (254626) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.94/-0.66 | Audio(RMS): 0.0473
+W (254627) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (257630) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.04 | Audio(RMS): 0.1132
+I (258632) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.03 | Audio(RMS): 0.1586
+I (259635) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.1711
+I (260636) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.05 | Audio(RMS): 0.1476
+I (261638) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.05 | Audio(RMS): 0.0933
+W (261639) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (264643) ALARM_CORE: Eval -> IMU_Z(Max/Min): 1.00/-1.00 | Audio(RMS): 0.0426
+W (264644) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (267648) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.06/-0.05 | Audio(RMS): 0.0438
+I (268648) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.04 | Audio(RMS): 0.0415
+I (269650) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.04 | Audio(RMS): 0.0442
+I (270651) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0498
+I (271655) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.05 | Audio(RMS): 0.0509
+I (272655) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.05/-0.06 | Audio(RMS): 0.0484
+I (273656) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.23/-0.43 | Audio(RMS): 0.0431
+W (273657) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (276662) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.32/-0.43 | Audio(RMS): 0.0898
+W (276662) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (279666) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.03 | Audio(RMS): 0.1328
+I (280667) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.05 | Audio(RMS): 0.1103
+I (281668) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.04/-0.05 | Audio(RMS): 0.0583
+W (281669) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (284675) ALARM_CORE: Eval -> IMU_Z(Max/Min): 1.00/-0.50 | Audio(RMS): 0.0467
+W (284676) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (287679) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.10/-0.18 | Audio(RMS): 0.0612
+W (287679) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (290681) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.07/-0.04 | Audio(RMS): 0.1322
+I (291684) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.13/-0.28 | Audio(RMS): 0.0778
+W (291685) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (294690) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.76/-0.97 | Audio(RMS): 0.0410
+W (294690) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (297692) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.03/-0.04 | Audio(RMS): 0.0487
+W (297693) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (300049) MOCK_SENSORS: ⏹ FIN DEL ARCHIVO: caminando_20260529_121247. Siguiente en 3 seg...
+I (303051) MOCK_SENSORS: ==========================================
+I (303051) MOCK_SENSORS: ▶ INYECTANDO: caminando_20260529_120732
+I (303054) MOCK_SENSORS: ==========================================
+I (303416) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.08/-0.15 | Audio(RMS): 0.0530
+W (303416) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (306419) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.26/-0.31 | Audio(RMS): 0.1085
+W (306419) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (309423) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.15/-0.37 | Audio(RMS): 0.0754
+W (309424) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (312427) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.21/-0.19 | Audio(RMS): 0.0794
+W (312428) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (315431) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.45/-0.21 | Audio(RMS): 0.0609
+W (315431) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (318432) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.42/-0.32 | Audio(RMS): 0.0607
+W (318433) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (321911) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.75/-0.38 | Audio(RMS): 0.0592
+W (321912) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (324916) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.58/-0.22 | Audio(RMS): 0.0977
+W (324917) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (327921) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.88/-0.33 | Audio(RMS): 0.0748
+W (327921) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (330926) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.73/-0.43 | Audio(RMS): 0.0795
+W (330926) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (333927) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.28/-0.23 | Audio(RMS): 0.0558
+W (333928) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (336930) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.20/-0.38 | Audio(RMS): 0.0869
+W (336931) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (339935) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.34/-0.43 | Audio(RMS): 0.0927
+W (339936) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (342938) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.25/-0.22 | Audio(RMS): 0.0602
+W (342938) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (345941) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.40/-0.23 | Audio(RMS): 0.1168
+W (345942) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (348946) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.81/-0.37 | Audio(RMS): 0.1641
+W (348947) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (351949) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.32/-0.65 | Audio(RMS): 0.0809
+W (351949) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (354954) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.24/-0.17 | Audio(RMS): 0.1621
+W (354954) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (357957) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.70/-0.37 | Audio(RMS): 0.1680
+W (357958) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (360961) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.31/-0.22 | Audio(RMS): 0.2010
+W (360962) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (363964) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.27/-0.17 | Audio(RMS): 0.1492
+W (363965) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (366968) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.26/-0.39 | Audio(RMS): 0.1218
+W (366968) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (369972) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.20/-0.16 | Audio(RMS): 0.0802
+W (369972) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (372973) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.26/-0.19 | Audio(RMS): 0.1021
+W (372974) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (375979) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.20/-0.20 | Audio(RMS): 0.0997
+W (375979) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (378982) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.23/-0.20 | Audio(RMS): 0.0818
+W (378983) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (381986) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.26/-0.19 | Audio(RMS): 0.0832
+W (381987) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (384990) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.33/-0.38 | Audio(RMS): 0.0650
+W (384991) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (387995) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.31/-0.32 | Audio(RMS): 0.0908
+W (387995) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (390998) ALARM_CORE: Eval -> IMU_Z(Max/Min): 0.34/-0.26 | Audio(RMS): 0.0787
+W (390998) ALARM_CORE: ⚠️ ¡ALERTA! PASOS DETECTADOS ⚠️
+I (391892) MOCK_SENSORS: ⏹ FIN DEL ARCHIVO: caminando_20260529_120732. Siguiente en 3 seg...

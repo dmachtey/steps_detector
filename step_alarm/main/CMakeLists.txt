@@ -20,6 +20,7 @@ idf_component_register(
         "alarm_logic/Classifier.c"
         "alarm_logic/dsp_audio.c"
         "alarm_logic/alarm_core.c"
+        "mock_sensors.c"
 
     INCLUDE_DIRS
         "."

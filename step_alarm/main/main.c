@@ -1,13 +1,18 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
-#include "nvs_flash.h" // <-- LIBRERÍA NUEVA
+#include "nvs_flash.h"
 #include "gui_hw.h"
 
 #include "hardware.h"
 #include "gui.h"
 #include "app_core.h"
 #include "alarm_logic/alarm_core.h"
+#include "config.h"
+
+
+// Inclusión de la cabecera del simulador
+#include "mock_sensors.h"
 
 static const char *TAG = "MAIN";
 
@@ -37,13 +42,22 @@ void app_main(void) {
         gui_unlock();
     }
 
-    // 3. Inicializar la Lógica (Sensores y WiFi)
+    // 3. Inicializar la Lógica (SD, Colas y WiFi)
+    // IMPORTANTE: Dentro de app_core_init() NO se deben iniciar hw_imu ni hw_mic si el simulador está en 1.
     app_core_init();
 
     ESP_LOGI(TAG, "==== ARRANQUE EXITOSO ====");
 
-    // Iniciar el vigilante del pontón
+    // 4. Iniciar el vigilante del pontón (El Cerebro)
     alarm_core_start_task();
+
+    // Activamos la alarma automáticamente para la prueba
+    alarm_core_set_state(true);
+
+#if MODO_SIMULADOR_SD == 1
+    // 5. Iniciar el Impostor (Inyecta datos a las colas desde la SD)
+    xTaskCreate(mock_sensors_task, "mock_sensors", 4096, NULL, 5, NULL);
+#endif
 
     while (1) {
         vTaskDelay(pdMS_TO_TICKS(1000));
