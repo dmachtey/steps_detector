@@ -6,7 +6,7 @@ from modulos.data_prep import segmentar_multimodal
 RAW_DATA_DIR = '../raw-data'
 PROCESSED_DATA_DIR = './datos_procesados'
 WINDOW_SEC = 3.0
-OVERLAP_SEC = 0.5
+OVERLAP_SEC = 2.5
 FS_ACCEL = 50
 FS_AUDIO = 8000
 
