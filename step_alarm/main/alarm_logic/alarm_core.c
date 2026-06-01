@@ -7,10 +7,18 @@
 #include "esp_log.h"
 #include "esp_heap_caps.h"
 #include <string.h>
+#include <math.h> // Necesario para sqrtf()
 
 #include "../gui/gui.h"
 
-// --- CONSTANTES DE NORMALIZACIÓN (El "Punto Dulce" de Octave) ---
+// ==============================================================================
+// 🚩 BANDERA MAESTRA DE ARQUITECTURA (FEATURE FLAG)
+// 1 = Usa el modelo optimizado de 15 características (12 IMU + 3 Audio)
+// 0 = Usa el modelo crudo masivo de 453 características (450 IMU + 3 Audio)
+// ==============================================================================
+#define USE_EXTRACTED_FEATURES 1
+
+// --- CONSTANTES DE NORMALIZACIÓN ---
 #define DIV_IMU 800.0f
 #define DIV_AUDIO 2000.0f
 #define CLAMP(val) ((val) > 1.0f ? 1.0f : ((val) < -1.0f ? -1.0f : (val)))
@@ -22,9 +30,14 @@ typedef struct { int16_t x; int16_t y; int16_t z; } imu_data_t;
 extern QueueHandle_t alarm_imu_queue;
 extern QueueHandle_t alarm_mic_queue;
 
-// Buffers para el Machine Learning
+// Buffers para el Machine Learning adaptativos según la macro
+#if USE_EXTRACTED_FEATURES
+    static float features[15]; 
+#else
+    static float features[453];
+#endif
+
 static int16_t raw_imu_buffer[450];
-static float features[453];
 static float *audio_buffer = NULL;
 
 static bool alarma_activa = false;
@@ -39,7 +52,7 @@ void alarm_core_set_state(bool state) {
 }
 
 static void alarm_task(void *pvParameters) {
-    ESP_LOGI(TAG, "Cerebro IA iniciado. Esperando armado...");
+    ESP_LOGI(TAG, "Cerebro IA iniciado. Modo Features: %d. Esperando armado...", USE_EXTRACTED_FEATURES);
 
     bool primer_llenado = true;
     int vueltas_a_dar = 150;
@@ -93,7 +106,7 @@ static void alarm_task(void *pvParameters) {
                 imu_idx += 3;
             }
 
-            // 2. Audio: Normalizamos al vuelo (DIV_AUDIO = 7000.0)
+            // 2. Audio: Normalizamos al vuelo
             int16_t mic_chunk[160];
             if (xQueueReceive(alarm_mic_queue, mic_chunk, pdMS_TO_TICKS(100)) == pdTRUE) {
                 for(int j = 0; j < 160; j++) {
@@ -103,32 +116,82 @@ static void alarm_task(void *pvParameters) {
         } // Fin del for
 
         // ========================================================
-        // MAGIA MATEMÁTICA: Espejo 100% exacto de Python (np.mean)
+        // PROCESAMIENTO MATEMÁTICO (Seleccionado por Macro)
         // ========================================================
-        float mean_x = 0, mean_y = 0, mean_z = 0;
 
-        // A. Calculamos el promedio exacto de los últimos 3 segundos
+#if USE_EXTRACTED_FEATURES
+        // --------------------------------------------------------
+        // MODO 1: EXTRACCIÓN DE 15 CARACTERÍSTICAS
+        // --------------------------------------------------------
+        float mean_raw[3] = {0, 0, 0};
+        for (int i = 0; i < 450; i += 3) {
+            mean_raw[0] += raw_imu_buffer[i];
+            mean_raw[1] += raw_imu_buffer[i+1];
+            mean_raw[2] += raw_imu_buffer[i+2];
+        }
+        mean_raw[0] /= 150.0f; mean_raw[1] /= 150.0f; mean_raw[2] /= 150.0f;
+
+        float temporal_imu[450];
+        for (int i = 0; i < 450; i += 3) {
+            temporal_imu[i]   = CLAMP(((float)raw_imu_buffer[i]   - mean_raw[0]) / DIV_IMU);
+            temporal_imu[i+1] = CLAMP(((float)raw_imu_buffer[i+1] - mean_raw[1]) / DIV_IMU);
+            temporal_imu[i+2] = CLAMP(((float)raw_imu_buffer[i+2] - mean_raw[2]) / DIV_IMU);
+        }
+
+        // Extracción IMU (12 Variables)
+        for (int eje = 0; eje < 3; eje++) {
+            float sum_val = 0.0f; float sum_sq = 0.0f;
+            float max_val = -1.0f; float min_val = 1.0f;
+
+            for (int i = 0; i < 150; i++) {
+                float val = temporal_imu[i * 3 + eje]; 
+                sum_val += val; sum_sq += (val * val);
+                if (val > max_val) max_val = val;
+                if (val < min_val) min_val = val;
+            }
+
+            float mean_norm = sum_val / 150.0f;
+            float mean_sq = sum_sq / 150.0f;
+            float rms = sqrtf(mean_sq);
+            float var = mean_sq - (mean_norm * mean_norm); 
+
+            int idx = eje * 4;
+            features[idx]     = rms;
+            features[idx + 1] = max_val;
+            features[idx + 2] = min_val;
+            features[idx + 3] = var;
+        }
+
+        // Extracción Audio (3 Variables)
+        dsp_audio_extraer_features(audio_buffer, &features[12], &features[13], &features[14]);
+        ESP_LOGI(TAG, "Eval -> IMU_Z(Max/Min): %.2f/%.2f | Audio(RMS): %.4f", features[9], features[10], features[12]);
+
+#else
+        // --------------------------------------------------------
+        // MODO 0: 450 DATOS CRUDOS + 3 AUDIO
+        // --------------------------------------------------------
+        float mean_x = 0, mean_y = 0, mean_z = 0;
         for (int i = 0; i < 450; i += 3) {
             mean_x += raw_imu_buffer[i];
             mean_y += raw_imu_buffer[i+1];
             mean_z += raw_imu_buffer[i+2];
         }
-        mean_x /= 150.0f;
-        mean_y /= 150.0f;
-        mean_z /= 150.0f;
+        mean_x /= 150.0f; mean_y /= 150.0f; mean_z /= 150.0f;
 
-        // B. Restamos la gravedad, dividimos (DIV_IMU = 1000.0) y saturamos
         for (int i = 0; i < 450; i += 3) {
             features[i]   = CLAMP(((float)raw_imu_buffer[i]   - mean_x) / DIV_IMU);
             features[i+1] = CLAMP(((float)raw_imu_buffer[i+1] - mean_y) / DIV_IMU);
             features[i+2] = CLAMP(((float)raw_imu_buffer[i+2] - mean_z) / DIV_IMU);
         }
 
-        // --- EXTRACCIÓN Y PREDICCIÓN ---
         dsp_audio_extraer_features(audio_buffer, &features[450], &features[451], &features[452]);
+        ESP_LOGI(TAG, "Eval -> IMU_Z(0): %.2f | Audio(RMS): %.4f", features[2], features[450]);
 
-        ESP_LOGI(TAG, "Evaluando Ventana - Acel_X(G): %.2f | Audio RMS: %.4f", features[0], features[450]);
+#endif
 
+        // ========================================================
+        // PREDICCIÓN CON EL MODELO SELECCIONADO
+        // ========================================================
         int prediccion = predict(features);
 
         if (prediccion == 1) {
@@ -142,6 +205,7 @@ static void alarm_task(void *pvParameters) {
 }
 
 void alarm_core_start_task(void) {
+    // Preservamos intacta tu asignación de memoria en SPIRAM
     audio_buffer = (float *)heap_caps_malloc(24000 * sizeof(float), MALLOC_CAP_SPIRAM);
     if (audio_buffer == NULL) {
         ESP_LOGE(TAG, "Error: No hay PSRAM disponible para el buffer de audio.");
