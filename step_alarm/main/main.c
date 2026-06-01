@@ -6,7 +6,7 @@
 
 #include "hardware.h"
 #include "gui.h"
-#include "app_core.h"
+#include "core/app_core.h"
 #include "alarm_logic/alarm_core.h"
 #include "config.h"
 

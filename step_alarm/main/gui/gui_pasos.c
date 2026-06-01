@@ -1,6 +1,6 @@
 #include "gui_screens.h"
 #include "gui_hw.h" // Para usar gui_lock()
-#include "../app_core.h"
+#include "../core/app_core.h"
 #include <stdlib.h> // Para atoi()
 
 // Variables de los gráficos exclusivas de esta pantalla

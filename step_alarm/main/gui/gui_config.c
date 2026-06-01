@@ -1,6 +1,6 @@
 #include "gui_screens.h"
 #include "gui_hostname.h"
-#include "../app_core.h"
+#include "../core/app_core.h"
 
 // Callbacks específicos de navegación interna
 static void btn_ir_pasos_cb(lv_event_t * e) {

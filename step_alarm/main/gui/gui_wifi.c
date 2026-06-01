@@ -1,5 +1,7 @@
-#include "gui_screens.h"
 #include "app_core.h"
+#include "app_wifi.h"
+#include "gui_screens.h"
+#include "../core/app_core.h"
 #include "esp_log.h"
 
 static const char *TAG = "GUI_WIFI";
@@ -16,7 +18,7 @@ static void btn_volver_config_cb(lv_event_t * e) {
 static void ta_event_cb(lv_event_t * e) {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t * ta = lv_event_get_target(e);
-    
+
     if(code == LV_EVENT_FOCUSED) {
         lv_keyboard_set_textarea(kb_wifi, ta);
         lv_obj_clear_flag(kb_wifi, LV_OBJ_FLAG_HIDDEN);
@@ -31,10 +33,10 @@ static void btn_guardar_wifi_cb(lv_event_t * e) {
     if(lv_event_get_code(e) == LV_EVENT_CLICKED) {
         const char * ssid = lv_textarea_get_text(ta_ssid);
         const char * pass = lv_textarea_get_text(ta_pass);
-        
+
         ESP_LOGI(TAG, "Guardando credenciales WiFi...");
-        app_core_guardar_wifi(ssid, pass);
-        
+        app_wifi_guardar_credenciales(ssid, pass);
+
         lv_scr_load(scr_config);
     }
 }

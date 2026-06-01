@@ -1,5 +1,6 @@
 #include "gui_hostname.h"
-#include "../app_core.h"
+#include "../core/app_core.h"
+#include "../core/app_wifi.h"
 
 lv_obj_t * scr_hostname;
 static lv_obj_t * ta_hostname = NULL;
@@ -22,7 +23,7 @@ static void ta_hostname_event_cb(lv_event_t * e) {
     }
     else if (code == LV_EVENT_READY) {
         const char * nuevo_nombre = lv_textarea_get_text(ta);
-        app_core_set_device_name(nuevo_nombre);
+        app_wifi_set_device_name(nuevo_nombre);
 
         if (kb_hostname) lv_obj_add_flag(kb_hostname, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_state(ta, LV_STATE_FOCUSED);
@@ -53,7 +54,7 @@ void gui_crear_pantalla_hostname(void) {
     lv_obj_align(ta_hostname, LV_ALIGN_TOP_MID, 0, 60);
 
     char dev_name[MAX_DEV_NAME_LEN];
-    app_core_get_device_name(dev_name, sizeof(dev_name));
+    app_wifi_get_device_name(dev_name, sizeof(dev_name));
     lv_textarea_set_text(ta_hostname, dev_name);
 
     lv_obj_add_event_cb(ta_hostname, ta_hostname_event_cb, LV_EVENT_ALL, NULL);
