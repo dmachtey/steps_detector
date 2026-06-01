@@ -1,47 +1,35 @@
-python3 entrenar_clasico.py
-=== Pipeline Clásico: Random Forest + Audio DSP ===
+=== Pipeline Optimizado: Random Forest + Feature Extraction (15 Variables) ===
 
-[1] Cargando dataset multimodal...
+[1] Cargando dataset multimodal masivo...
 
-[2] Extrayendo características (Acelerómetro Raw + Audio DSP)...
- -> Forma final de los datos: (239, 453) (Ventanas, Características)
+[2] Procesando IMU y extrayendo 12 características estadísticas...
+[3] Procesando Audio y extrayendo 3 características...
+ -> Forma final de los datos: (1363, 15) (Ventanas, Características)
 
-[3] Entrenando Random Forest...
+[4] Entrenando Random Forest...
 
-[4] Evaluando Resultados del Examen...
+--- RANKING DE IMPORTANCIA ---
+IMU (Movimiento):
+  Eje X (Lateral):  35.89%
+  Eje Y (Frontal):  26.83%
+  Eje Z (Vertical): 19.53%
+Audio (Micrófono):
+  RMS:  4.29%
+  ZCR:  7.88%
+  Freq: 5.58%
 
---- REPORTE DE RENDIMIENTO ---
-Total de ventanas evaluadas: 30
-✔️  Pasos detectados (TP): 14
-✔️  Reposo detectado (TN): 15
-❌ Falsas Alarmas (FP):  0
-❌ Pasos Ignorados (FN): 1
-------------------------------
-
-[5] Generando código ANSI C...
- -> ¡ÉXITO! Classifier.c exportado a: ../step_alarm/main/alarm_logic
- -> (Asegurate de tener el Classifier.h copiado en esa carpeta también).
-proyecto_ml$ python3 entrenar_clasico.py
-=== Pipeline Clásico: Random Forest + Audio DSP ===
-
-[1] Cargando dataset multimodal...
-
-[2] Extrayendo características (Acelerómetro Raw + Audio DSP)...
- -> Forma final de los datos: (239, 453) (Ventanas, Características)
-
-[3] Entrenando Random Forest...
-
-[4] Evaluando Resultados del Examen...
+[5] Evaluando Resultados del Examen...
 
 --- REPORTE DE RENDIMIENTO ---
-Total de ventanas evaluadas: 30
-✔️  Pasos detectados (TP): 15
-✔️  Reposo detectado (TN): 15
-❌ Falsas Alarmas (FP):  0
-❌ Pasos Ignorados (FN): 0
+Total de ventanas de prueba evaluadas: 205
+✔️  Pasos detectados (TP): 104
+✔️  Reposo detectado (TN): 100
+❌ Falsas Alarmas (FP):   0
+❌ Pasos Ignorados (FN):  1
 ------------------------------
 
-[5] Generando código ANSI C...
- -> ¡ÉXITO! Classifier.c exportado a: ../step_alarm/main/alarm_logic
- -> (Asegurate de tener el Classifier.h copiado en esa carpeta
- también).
+[6] Generando código ANSI C puro con m2cgen...
+ -> ¡ÉXITO! Classifier.c y Classifier.h exportados a: ../step_alarm/main/alarm_logic
+
+[6] Generando código ANSI C puro con m2cgen...
+ -> ¡ÉXITO! Classifier.c y Classifier.h exportados a: ../step_alarm/main/alarm_logic

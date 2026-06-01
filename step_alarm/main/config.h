@@ -11,7 +11,7 @@
 // MODO DE OPERACIÓN
 // 1 = Lee los CSV/WAV desde la SD (Simulador de Laboratorio)
 // 0 = Usa el Hardware Real (IMU I2C y Micrófono I2S en el pontón)
-#define MODO_SIMULADOR_SD 1
+#define MODO_SIMULADOR_SD 0
 
 // RUTAS DEL SISTEMA
 #define SD_MOUNT_POINT "/sdcard/raw-data"
