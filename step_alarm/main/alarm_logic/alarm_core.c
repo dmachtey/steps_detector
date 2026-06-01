@@ -32,7 +32,7 @@ extern QueueHandle_t alarm_mic_queue;
 
 // Buffers para el Machine Learning adaptativos según la macro
 #if USE_EXTRACTED_FEATURES
-    static float features[15]; 
+    static float features[15];
 #else
     static float features[453];
 #endif
@@ -144,7 +144,7 @@ static void alarm_task(void *pvParameters) {
             float max_val = -1.0f; float min_val = 1.0f;
 
             for (int i = 0; i < 150; i++) {
-                float val = temporal_imu[i * 3 + eje]; 
+                float val = temporal_imu[i * 3 + eje];
                 sum_val += val; sum_sq += (val * val);
                 if (val > max_val) max_val = val;
                 if (val < min_val) min_val = val;
@@ -153,7 +153,7 @@ static void alarm_task(void *pvParameters) {
             float mean_norm = sum_val / 150.0f;
             float mean_sq = sum_sq / 150.0f;
             float rms = sqrtf(mean_sq);
-            float var = mean_sq - (mean_norm * mean_norm); 
+            float var = mean_sq - (mean_norm * mean_norm);
 
             int idx = eje * 4;
             features[idx]     = rms;
@@ -164,7 +164,7 @@ static void alarm_task(void *pvParameters) {
 
         // Extracción Audio (3 Variables)
         dsp_audio_extraer_features(audio_buffer, &features[12], &features[13], &features[14]);
-        ESP_LOGI(TAG, "Eval -> IMU_Z(Max/Min): %.2f/%.2f | Audio(RMS): %.4f", features[9], features[10], features[12]);
+        // ESP_LOGI(TAG, "Eval -> IMU_Z(Max/Min): %.2f/%.2f | Audio(RMS): %.4f", features[9], features[10], features[12]);
 
 #else
         // --------------------------------------------------------
@@ -185,7 +185,7 @@ static void alarm_task(void *pvParameters) {
         }
 
         dsp_audio_extraer_features(audio_buffer, &features[450], &features[451], &features[452]);
-        ESP_LOGI(TAG, "Eval -> IMU_Z(0): %.2f | Audio(RMS): %.4f", features[2], features[450]);
+        //ESP_LOGI(TAG, "Eval -> IMU_Z(0): %.2f | Audio(RMS): %.4f", features[2], features[450]);
 
 #endif
 

@@ -4,7 +4,7 @@
 #
 # Created: Wed May 20 06:50:51 2026 (-0300)
 #
-# Last-Updated: Sun May 31 07:20:55 2026 (-0300)
+# Last-Updated: Mon Jun  1 13:02:14 2026 (-0300)
 #+LATEX_CLASS: article
 #+LATEX_CLASS_OPTIONS: [a4paper, 11pt, oneside]
 #+TITLE: Detección de Intrusión mediante Análisis Vibracional en Estructuras Flotantes
@@ -254,3 +254,69 @@ ventana en el modelo de Machine Learning local:
   $X, Y, Z$ crudas se acoplan directamente a las características
   extraídas del audio para conformar un único vector de entrada que
   alimenta al modelo Random Forest.
+
+
+* Hoja de Ruta
+
+** Fase 1: Optimización de Procesamiento (El Motor)
+*** [ ] 1.1 Implementación de Ventanas Deslizantes (Sliding Window) :IA:CORE:
+- Modificar el buffer de evaluación de la Inteligencia Artificial (~alarm_core.c~).
+- *Objetivo:* En lugar de esperar a llenar una ventana completa desde
+  cero, implementar un desplazamiento continuo: introducir 200 ms de
+  datos nuevos (IMU + Audio), descartar los 200 ms más antiguos y
+  reevaluar (~predict()~).
+- *Beneficio:* Aumentará dramáticamente la resolución temporal para
+  evitar "cortar" la firma acústica/mecánica de un paso a la mitad.
+
+*** [ ] 1.2 Distribución Asimétrica en Dual-Core (Afinidad de Tareas) :RTOS:PERFORMANCE:
+- Mapear explícitamente las tareas de FreeRTOS usando
+  ~xTaskCreatePinnedToCore~ para evitar cuellos de botella y
+  aprovechar el ESP32-S3.
+  - *Core 0 (PRO_CPU):* Reservado para operaciones bloqueantes y de
+    red (WiFi, Stack TCP/IP, UI con LVGL, Escritura en SD).
+  - *Core 1 (APP_CPU):* Dedicado al procesamiento en tiempo real
+    (Lectura I2C del IMU, DMA del Micrófono y la inferencia pesada del
+    Random Forest).
+
+** Fase 2: Telemetría y Alertas (Conectividad)
+*** [ ] 2.1 Desarrollo del Módulo MQTT :NETWORK:
+- Crear el módulo ~core/app_mqtt.[ch]~ integrando el cliente MQTT nativo de ESP-IDF.
+- Programar lógicas de auto-reconexión silenciosa en caso de micro-cortes de WiFi generados por el oleaje.
+
+*** [ ] 2.2 Definición del Formato de Alerta (Payload JSON) :DATA:
+- Estructurar el mensaje de salida.
+- *Ejemplo:* Al detectar un paso, enviar un JSON con el ~timestamp~ exacto, el nivel de impacto (Gravedad en ~Accel_Z~) y el RMS del audio.
+
+*** [ ] 2.3 Despliegue del Broker MQTT (Servidor) :INFRA:
+- Definir y levantar el servidor que escuchará al pontón.
+- *Opciones:* Mosquitto local en una Raspberry Pi en el muelle, o un broker cloud (HiveMQ / AWS IoT).
+
+** Fase 3: Configuración y Experiencia de Usuario (GUI)
+*** [ ] 3.1 Gestión Dinámica de Fecha y Zona Horaria :RTC:NVS:
+- Ampliar el módulo ~hw_rtc~ para sincronizar la hora UTC mediante NTP
+  y aplicar reglas POSIX de zona horaria (ej: verano/invierno).
+- Guardar la configuración de zona horaria de forma persistente en NVS.
+
+*** [ ] 3.2 Pantallas de Configuración Extendida :LVGL:GUI:
+- Crear nuevos teclados y menús visuales para que el usuario pueda introducir:
+  - IP/URL del Broker MQTT.
+  - Puerto MQTT.
+  - Zona Horaria.
+- *Beneficio:* Permite reconfigurar el equipo in-situ sin necesidad de conectarlo a una PC.
+
+** Fase 4: Faltantes Críticos para Producción
+*** [ ] 4.1 Actualizaciones OTA (Over-The-Air) :CRITICO:SYSTEM:
+- Implementar una ruta para actualizar el firmware vía WiFi.
+- *Caso de uso:* Flashear un nuevo ~Classifier.c~ re-entrenado con mayor precisión, estando a distancia y sin abrir la caja estanca del equipo.
+
+*** [ ] 4.2 Watchdog Timer (Perro Guardián) :SAFETY:
+- Activar el Task Watchdog de FreeRTOS.
+- *Beneficio:* Si estática, rayos cósmicos o un error de memoria congelan la tarea de IA o el WiFi, el Watchdog forzará un reinicio de hardware automático.
+
+*** [ ] 4.3 Ajuste de Sensibilidad por GUI (Thresholding) :GUI:IA:
+- Agregar un "Slider" en la pantalla táctil que varíe el umbral matemático del clasificador (multiplicador para diferenciar pasos de falsas alarmas).
+- *Beneficio:* Adaptación rápida a las condiciones del mar (ej: agua muy picada) sin tocar código.
+
+*** [ ] 4.4 Ahorro de Energía (Screen Saver AMOLED) :POWER:GUI:
+- Implementar una rutina que baje el brillo al 0% después de 30 segundos de inactividad táctil.
+- *Beneficio:* Previene el /Burn-in/ (quemado) de la pantalla AMOLED y reduce drásticamente el consumo de batería del pontón.
