@@ -4,7 +4,7 @@
 #
 # Created: Wed May 20 06:50:51 2026 (-0300)
 #
-# Last-Updated: Mon Jun  1 13:02:14 2026 (-0300)
+# Last-Updated: Thu Jun 11 07:55:36 2026 (-0300)
 #+LATEX_CLASS: article
 #+LATEX_CLASS_OPTIONS: [a4paper, 11pt, oneside]
 #+TITLE: Detección de Intrusión mediante Análisis Vibracional en Estructuras Flotantes
@@ -13,6 +13,21 @@
 #+DATE: 2026-04-26
 #+DESCRIPTION: Proyecto final para la asignatura Procesamiento Digital de Señales en Sistemas Embebidos (UNER)
 #+OPTIONS: toc:2
+
+
+# --- DEFINICIÓN DE SÍMBOLOS (MACROS) ---
+#+MACRO: badge_esp32 #+HTML: <img src="https://img.shields.io/badge/Platform-ESP32--S3-orange?style=for-the-badge&logo=espressif" alt="ESP32-S3">
+#+MACRO: badge_idf   #+HTML: <img src="https://img.shields.io/badge/Framework-ESP--IDF_v5.3-blue?style=for-the-badge&logo=espressif" alt="ESP-IDF">
+#+MACRO: badge_c     #+HTML: <img src="https://img.shields.io/badge/Language-C-00599C?style=for-the-badge&logo=c" alt="C">
+#+MACRO: badge_lvgl  #+HTML: <img src="https://img.shields.io/badge/GUI-LVGL-EA4AAA?style=for-the-badge&logo=lvgl" alt="LVGL">
+#+MACRO: badge_emacs #+HTML: <img src="https://img.shields.io/badge/Editor-Emacs-7F5AB6?style=for-the-badge&logo=gnuemacs" alt="Emacs">
+#+MACRO: badge_mit   #+HTML: <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT">
+
+# --- RENDERIZADO DE LOS BADGES ---
+#+HTML: <div align="center">
+{{{badge_esp32}}} {{{badge_idf}}} {{{badge_c}}} {{{badge_lvgl}}} {{{badge_emacs}}} {{{badge_mit}}}
+#+HTML: <div align="center">
+
 
 * Introducción
 ** Contexto del Proyecto
